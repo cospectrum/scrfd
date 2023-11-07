@@ -6,6 +6,9 @@
 Efficient face detection using SCRFD onnxruntime inference.
 
 Requires python >= 3.10
+```sh
+pip install scrfd
+```
 
 ```py
 from scrfd import SCRFD, Threshold
