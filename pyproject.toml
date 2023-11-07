@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "scrfd"
 version = "0.1.0"
-description = "SCRFD inference"
-authors = ["cospectrum"]
+description = "Efficient face detection using SCRFD onnxruntime inference"
+repository = "https://github.com/cospectrum/scrfd"
+authors = ["cospectrum <severinalexeyv@gmail.com>"]
 readme = "README.md"
+license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"

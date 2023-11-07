@@ -1,4 +1,11 @@
 # SCRFD
+[![github]](https://github.com/cospectrum/scrfd)
+
+[github]: https://img.shields.io/badge/github-cospectrum/scrfd-8da0cb?logo=github
+
+Efficient face detection using SCRFD onnxruntime inference.
+
+Requires python >= 3.10
 
 ```py
 from scrfd import SCRFD, Threshold

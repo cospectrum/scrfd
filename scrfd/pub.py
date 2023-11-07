@@ -12,8 +12,8 @@ class SCRFD:
     _inner: SCRFDBase
 
     @staticmethod
-    def from_path(path: str) -> SCRFD:
-        return SCRFD(SCRFDBase(path))
+    def from_path(path: str, providers: list[str] | None = None) -> SCRFD:
+        return SCRFD(SCRFDBase(path, providers))
 
     def detect(
         self,
