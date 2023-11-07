@@ -24,4 +24,4 @@ for face in faces:
     print(f"{bbox=}, {kps=}, {score=}")
 ```
 
-<img align="middle" src="./images/readme.jpg" alt="face detection">
+<img align="middle" src="https://github.com/cospectrum/scrfd/blob/main/images/readme.jpg?raw=True" alt="face detection">
