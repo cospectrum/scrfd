@@ -27,10 +27,7 @@ class SCRFDBase:
         path: str,
         providers: list[str] | None = None,
     ) -> None:
-        self.session = InferenceSession(path)
-        if providers is None:
-            providers = ["CPUExecutionProvider"]
-        self.session.set_providers(providers)
+        self.session = InferenceSession(path, providers=providers)
 
     @classmethod
     def fmc(cls) -> int:
