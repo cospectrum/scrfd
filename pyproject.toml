@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrfd"
-version = "0.1.0"
+version = "0.2.0"
 description = "Efficient face detection using SCRFD onnxruntime inference"
 repository = "https://github.com/cospectrum/scrfd"
 authors = ["cospectrum <severinalexeyv@gmail.com>"]
@@ -9,10 +9,10 @@ license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-numpy = "^1.26.1"
-onnxruntime = "^1.16.1"
-pillow = "^10.1.0"
-pydantic = "^2.4.2"
+numpy = "^1.26"
+onnxruntime = "^1.16"
+pillow = "^10"
+pydantic = "^2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
