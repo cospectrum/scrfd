@@ -5,19 +5,19 @@
 
 Efficient face detection using SCRFD onnxruntime inference.
 
-Requires python >= 3.10
 ```sh
 pip install scrfd
 ```
+Requires python >= 3.10
 
 ```py
 from scrfd import SCRFD, Threshold
 from PIL import Image
 
 face_detector = SCRFD.from_path("./models/scrfd.onnx")
-image = Image.open("./images/solvay_conference_1927.jpg")
-
 threshold = Threshold(probability=0.4)
+
+image = Image.open("./images/solvay_conference_1927.jpg")
 faces = face_detector.detect(image, threshold=threshold)
 
 for face in faces:
