@@ -19,15 +19,9 @@ class Detections:
         return Detections(np.array([]), np.array([]))
 
 
+@dataclass
 class SCRFDBase:
     session: InferenceSession
-
-    def __init__(
-        self,
-        path: str,
-        providers: list[str] | None = None,
-    ) -> None:
-        self.session = InferenceSession(path, providers=providers)
 
     @classmethod
     def fmc(cls) -> int:
@@ -100,7 +94,7 @@ class SCRFDBase:
 
         return scores_list, bboxes_list, kpss_list
 
-    def resize(self, image: PILImage, width: int, height: int) -> PILImage:
+    def resize(self, image: PILImage, *, width: int, height: int) -> PILImage:
         size = (width, height)
         return image.resize(size, resample=Image.NEAREST)
 
