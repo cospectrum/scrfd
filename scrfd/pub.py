@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from onnxruntime import InferenceSession
 from PIL.Image import Image as PILImage
+from typing import Sequence
 
 from .base import SCRFDBase, Detections
 from .schemas import Face, Point, Bbox, FaceKeypoints, Threshold
@@ -12,8 +14,13 @@ class SCRFD:
     _inner: SCRFDBase
 
     @staticmethod
-    def from_path(path: str, providers: list[str] | None = None) -> SCRFD:
-        return SCRFD(SCRFDBase(path, providers))
+    def from_session(session: InferenceSession) -> SCRFD:
+        return SCRFD(SCRFDBase(session))
+
+    @staticmethod
+    def from_path(path: str, providers: Sequence[str] | None = None) -> SCRFD:
+        session = InferenceSession(path, providers=providers)
+        return SCRFD.from_session(session)
 
     def detect(
         self,
