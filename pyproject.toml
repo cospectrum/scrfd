@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scrfd"
-version = "0.2.0"
+version = "0.2.1"
 description = "Efficient face detection using SCRFD onnxruntime inference"
 repository = "https://github.com/cospectrum/scrfd"
 authors = ["cospectrum <severinalexeyv@gmail.com>"]
