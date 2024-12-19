@@ -2,10 +2,11 @@ from __future__ import annotations
 import numpy as np
 
 from dataclasses import dataclass
-from onnxruntime import InferenceSession
-from PIL import Image
-from PIL.Image import Image as PILImage
-
+from onnxruntime import InferenceSession  # type: ignore
+from PIL.Image import (
+    Image as PILImage,
+    Resampling,
+)
 from .schemas import Threshold
 
 
@@ -96,7 +97,7 @@ class SCRFDBase:
 
     def resize(self, image: PILImage, *, width: int, height: int) -> PILImage:
         size = (width, height)
-        return image.resize(size, resample=Image.NEAREST)
+        return image.resize(size, resample=Resampling.NEAREST)
 
     def detect(
         self,
@@ -115,11 +116,10 @@ class SCRFDBase:
         det_scale = new_height / image.height
 
         resized_img = self.resize(image, width=new_width, height=new_height)
-        resized_img = np.array(resized_img)
 
         shape = (640, 640, 3)
         det_img = np.zeros(shape, dtype=np.uint8)
-        det_img[:new_height, :new_width, :] = resized_img
+        det_img[:new_height, :new_width, :] = np.array(resized_img)
 
         scores_list, bboxes_list, kpss_list = self.forward(
             det_img, threshold.probability

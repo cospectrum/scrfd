@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from onnxruntime import InferenceSession
+from onnxruntime import InferenceSession  # type: ignore
 from PIL.Image import Image as PILImage
 from typing import Sequence
 

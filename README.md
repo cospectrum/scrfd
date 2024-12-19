@@ -1,11 +1,12 @@
 # SCRFD
 [![github]](https://github.com/cospectrum/scrfd)
+[![ci]](https://github.com/cospectrum/scrfd/actions)
 
 [github]: https://img.shields.io/badge/github-cospectrum/scrfd-8da0cb?logo=github
+[ci]: https://github.com/cospectrum/scrfd/workflows/ci/badge.svg
 
-Efficient face detection using SCRFD onnxruntime inference.
+Efficient face detection using SCRFD.
 
-Requires python >= 3.10
 ```sh
 pip install scrfd
 ```
