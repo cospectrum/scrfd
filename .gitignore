@@ -177,20 +177,3 @@ Cargo.lock
 
 # macOS
 .DS_Store
-
-
-/*
-
-!.gitignore
-!.github
-!.pre-commit-config.yaml
-!pyproject.toml
-!poetry.lock
-!README.md
-!LICENSE
-!scrfd
-!tests
-
-!models
-!images
-!draw.py
