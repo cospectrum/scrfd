@@ -100,6 +100,8 @@ class SCRFDBase:
         return image.resize(size, resample=Resampling.NEAREST)
 
     def detect(self, image: PILImage, threshold: Threshold) -> Detections:
+        assert image.mode == "RGB"
+
         im_ratio = image.height / image.width
         if im_ratio > 1.0:
             new_height = 640
