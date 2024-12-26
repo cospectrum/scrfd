@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 from dataclasses import dataclass
 from onnxruntime import InferenceSession  # type: ignore
@@ -18,24 +19,21 @@ class SCRFD:
         return SCRFD(SCRFDBase(session))
 
     @staticmethod
-    def from_path(path: str, providers: Sequence[str] | None = None) -> SCRFD:
+    def from_path(
+        path: str | os.PathLike, providers: Sequence[str] | None = None
+    ) -> SCRFD:
         session = InferenceSession(path, providers=providers)
         return SCRFD.from_session(session)
 
-    def detect(
-        self,
-        image: PILImage,
-        threshold: Threshold | None = None,
-        max_faces: int | None = None,
-    ) -> list[Face]:
+    def detect(self, image: PILImage, threshold: Threshold | None = None) -> list[Face]:
         if threshold is None:
             threshold = Threshold()
         image = image if image.mode == "RGB" else image.convert("RGB")
-        detections = self._inner.detect(image, threshold=threshold, max_num=max_faces)
-        return parse_detections(detections)
+        detections = self._inner.detect(image, threshold=threshold)
+        return _parse_detections(detections)
 
 
-def parse_detections(detections: Detections) -> list[Face]:
+def _parse_detections(detections: Detections) -> list[Face]:
     bboxes = detections.bboxes
     keypoints = detections.keypoints
     assert bboxes.shape[0] == keypoints.shape[0]
