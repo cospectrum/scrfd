@@ -5,7 +5,7 @@ def test_readme() -> None:
     face_detector = SCRFD.from_path("./models/scrfd.onnx")
     threshold = Threshold(probability=0.4)
 
-    image = Image.open("./images/solvay_conference_1927.jpg")
+    image = Image.open("./images/solvay_conference_1927.jpg").convert("RGB")
     faces = face_detector.detect(image, threshold=threshold)
 
     for face in faces:
