@@ -99,12 +99,9 @@ class SCRFDBase:
         size = (width, height)
         return image.resize(size, resample=Resampling.NEAREST)
 
-    def detect(
-        self,
-        image: PILImage,
-        threshold: Threshold,
-        max_num: int | None = None,
-    ) -> Detections:
+    def detect(self, image: PILImage, threshold: Threshold) -> Detections:
+        assert image.mode == "RGB"
+
         im_ratio = image.height / image.width
         if im_ratio > 1.0:
             new_height = 640
@@ -140,25 +137,6 @@ class SCRFDBase:
 
         kpss = kpss[order, :, :]
         kpss = kpss[keep, :, :]  # type: ignore
-
-        if max_num is not None and det.shape[0] > max_num:
-            area = (det[:, 2] - det[:, 0]) * (det[:, 3] - det[:, 1])
-
-            img_center = image.height // 2, image.width // 2
-            offsets = np.vstack(
-                [
-                    (det[:, 0] + det[:, 2]) / 2 - img_center[1],
-                    (det[:, 1] + det[:, 3]) / 2 - img_center[0],
-                ]
-            )
-            offset_dist_squared = np.sum(np.power(offsets, 2.0), 0)
-
-            values = area - offset_dist_squared * 2.0
-            bindex = np.argsort(values)[::-1]
-            bindex = bindex[0:max_num]
-            det = det[bindex, :]
-            kpss = kpss[bindex, :]
-
         return Detections(bboxes=det, keypoints=kpss)
 
     def nms(self, dets: np.ndarray, nms_thresh: float) -> list:

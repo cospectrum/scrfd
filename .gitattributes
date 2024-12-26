@@ -1,3 +1,4 @@
 *.onnx filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
 *.onnx !text !filter !merge !diff
 *.png !text !filter !merge !diff
