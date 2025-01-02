@@ -38,63 +38,77 @@ class SCRFDBase:
 
     def output_names(self) -> list[str]:
         outputs = self.session.get_outputs()
-        assert len(outputs) == 9, len(outputs)
         return [out.name for out in outputs]
 
     def input_name(self) -> str:
         inputs = self.session.get_inputs()
         assert len(inputs) == 1
-        input = inputs[0]
-        return input.name
+        return inputs[0].name
 
     def forward(
         self, image: np.ndarray, scores_thresh: float
     ) -> tuple[list, list, list]:
+        CH, IH, IW = (3, 640, 640)
+        FMC = self.fmc()
+
         assert 0.0 <= scores_thresh <= 1.0
-        assert image.ndim == 3
-        input_height, input_width, _ = image.shape
+        assert image.shape == (IH, IW, CH)
+        ih, iw, _ = image.shape
 
         blob = self.blob_from_image(image, swap_rb=False)
+        assert blob.shape == (CH, IH, IW)
         blob = np.expand_dims(blob, axis=0)
-        net_outs = self.session.run(self.output_names(), {self.input_name(): blob})
+        assert blob.shape == (1, CH, IH, IW)
 
-        fmc = self.fmc()
+        output_names = self.output_names()
+        net_outs: list[np.ndarray] = self.session.run(
+            output_names, {self.input_name(): blob}
+        )
+        assert len(net_outs) == len(output_names)
+        assert len(net_outs) == len(self.feat_stride_fpn()) + 2 * FMC
+
         scores_list = []
         bboxes_list = []
         kpss_list = []
 
         for idx, stride in enumerate(self.feat_stride_fpn()):
-            scores = net_outs[idx][0]
-            bbox_preds = net_outs[idx + fmc][0]
-            bbox_preds = bbox_preds * stride
-            kps_preds = net_outs[idx + fmc * 2][0] * stride
-
-            height = input_height // stride
-            width = input_width // stride
-
+            anchor_height = ih // stride
+            anchor_width = iw // stride
             anchor_centers = np.stack(
-                np.mgrid[:height, :width][::-1],  # type: ignore
+                np.mgrid[:anchor_height, :anchor_width][::-1],  # type: ignore
                 axis=-1,
             ).astype(np.float32)
-
             anchor_centers = (anchor_centers * stride).reshape((-1, 2))
             if self.num_anchors() > 1:
                 anchor_centers = np.stack(
                     [anchor_centers] * self.num_anchors(), axis=1
                 ).reshape((-1, 2))
 
+            N = len(anchor_centers)
+            assert anchor_centers.shape == (N, 2)
+
+            scores = net_outs[idx]
+            bbox_preds = net_outs[idx + FMC] * stride
+            kps_preds = net_outs[idx + 2 * FMC] * stride
+
+            scores = scores.reshape((N, 1))
+            bbox_preds = bbox_preds.reshape((N, 4))
+            kps_preds = kps_preds.reshape((N, 10))
+
             bboxes = self.distance2bbox(anchor_centers, bbox_preds)
             kpss = self.distance2kps(anchor_centers, kps_preds)
             kpss = kpss.reshape((kpss.shape[0], -1, 2))
 
-            pos_inds = np.where(scores >= scores_thresh)[0]
-            pos_scores = scores[pos_inds]
-            pos_bboxes = bboxes[pos_inds]
-            pos_kpss = kpss[pos_inds]
+            indexes = np.where(scores >= scores_thresh)[0]
+            assert indexes.shape == (len(indexes),)
 
-            scores_list.append(pos_scores)
-            bboxes_list.append(pos_bboxes)
-            kpss_list.append(pos_kpss)
+            final_scores = scores[indexes]
+            final_bboxes = bboxes[indexes]
+            final_kpss = kpss[indexes]
+            assert len(final_scores) == len(final_bboxes) == len(final_kpss)
+            scores_list.append(final_scores)
+            bboxes_list.append(final_bboxes)
+            kpss_list.append(final_kpss)
 
         return scores_list, bboxes_list, kpss_list
 
@@ -124,31 +138,31 @@ class SCRFDBase:
         scores_list, bboxes_list, kpss_list = self.forward(
             det_img, threshold.probability
         )
+        assert len(scores_list) == len(bboxes_list) == len(kpss_list)
         if len(scores_list) == 0:
             return Detections.empty()
 
         scores = np.vstack(scores_list)
         scores_ravel = scores.ravel()
         order = scores_ravel.argsort()[::-1]
+
         bboxes = np.vstack(bboxes_list) * det_scale
         kpss = np.vstack(kpss_list) * det_scale
 
-        pre_det = np.hstack((bboxes, scores)).astype(np.float32, copy=False)
-        pre_det = pre_det[order, :]
-        keep = self.nms(pre_det, threshold.nms)
-        det = pre_det[keep, :]  # type: ignore
-
-        kpss = kpss[order, :, :]
-        kpss = kpss[keep, :, :]  # type: ignore
-        return Detections(bboxes=det, keypoints=kpss)
+        dets = np.hstack((bboxes, scores)).astype(np.float32)
+        dets = dets[order, :]
+        keep = self.nms(dets, threshold.nms)
+        final_dets = dets[keep, :]
+        final_kpss = kpss[order, ...][keep, ...]
+        return Detections(bboxes=final_dets, keypoints=final_kpss)
 
     def nms(self, dets: np.ndarray, nms_thresh: float) -> list[int]:
         assert 0.0 <= nms_thresh <= 1.0
         assert dets.ndim == 2
         x1, y1, x2, y2, scores = dets.T
 
-        areas = (x2 - x1 + 1) * (y2 - y1 + 1)  # type: ignore
-        order = scores.argsort()[::-1]
+        areas: np.ndarray = (x2 - x1 + 1) * (y2 - y1 + 1)
+        order: np.ndarray = scores.argsort()[::-1]
 
         keep = []
         while order.size > 0:
@@ -172,7 +186,7 @@ class SCRFDBase:
     def distance2bbox(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
         N = len(points)
         assert points.shape == (N, 2)
-        assert distance.shape == (N, 4)
+        assert distance.shape == (N, 4), distance.shape
         x1 = points[:, 0] - distance[:, 0]
         y1 = points[:, 1] - distance[:, 1]
         x2 = points[:, 0] + distance[:, 2]
@@ -182,7 +196,7 @@ class SCRFDBase:
     def distance2kps(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
         N = len(points)
         assert points.shape == (N, 2)
-        assert distance.shape == (N, 10)
+        assert distance.shape == (N, 10), distance.shape
         preds = []
         bound = distance.shape[1]
         for i in range(0, bound, 2):
