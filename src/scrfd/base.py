@@ -38,28 +38,30 @@ class SCRFDBase:
 
     def output_names(self) -> list[str]:
         outputs = self.session.get_outputs()
+        assert len(outputs) == 9, len(outputs)
         return [out.name for out in outputs]
 
     def input_name(self) -> str:
-        input = self.session.get_inputs()[0]
+        inputs = self.session.get_inputs()
+        assert len(inputs) == 1
+        input = inputs[0]
         return input.name
 
     def forward(
-        self,
-        image: np.ndarray,
-        scores_thresh: float,
+        self, image: np.ndarray, scores_thresh: float
     ) -> tuple[list, list, list]:
-        scores_list = []
-        bboxes_list = []
-        kpss_list = []
-        input_height = image.shape[0]
-        input_width = image.shape[1]
+        assert 0.0 <= scores_thresh <= 1.0
+        assert image.ndim == 3
+        input_height, input_width, _ = image.shape
 
         blob = self.blob_from_image(image, swap_rb=False)
         blob = np.expand_dims(blob, axis=0)
         net_outs = self.session.run(self.output_names(), {self.input_name(): blob})
 
         fmc = self.fmc()
+        scores_list = []
+        bboxes_list = []
+        kpss_list = []
 
         for idx, stride in enumerate(self.feat_stride_fpn()):
             scores = net_outs[idx][0]
@@ -81,16 +83,17 @@ class SCRFDBase:
                     [anchor_centers] * self.num_anchors(), axis=1
                 ).reshape((-1, 2))
 
-            pos_inds = np.where(scores >= scores_thresh)[0]
             bboxes = self.distance2bbox(anchor_centers, bbox_preds)
-            pos_scores = scores[pos_inds]
-            pos_bboxes = bboxes[pos_inds]
-            scores_list.append(pos_scores)
-            bboxes_list.append(pos_bboxes)
-
             kpss = self.distance2kps(anchor_centers, kps_preds)
             kpss = kpss.reshape((kpss.shape[0], -1, 2))
+
+            pos_inds = np.where(scores >= scores_thresh)[0]
+            pos_scores = scores[pos_inds]
+            pos_bboxes = bboxes[pos_inds]
             pos_kpss = kpss[pos_inds]
+
+            scores_list.append(pos_scores)
+            bboxes_list.append(pos_bboxes)
             kpss_list.append(pos_kpss)
 
         return scores_list, bboxes_list, kpss_list
@@ -100,22 +103,22 @@ class SCRFDBase:
         return image.resize(size, resample=Resampling.NEAREST)
 
     def detect(self, image: PILImage, threshold: Threshold) -> Detections:
+        N = 640
         assert image.mode == "RGB"
 
-        im_ratio = image.height / image.width
-        if im_ratio > 1.0:
-            new_height = 640
-            new_width = int(new_height / im_ratio)
+        img_ratio = image.height / image.width
+        if img_ratio > 1.0:
+            new_height = N
+            new_width = int(new_height / img_ratio)
         else:
-            new_width = 640
-            new_height = int(new_width * im_ratio)
-
-        det_scale = new_height / image.height
-
+            new_width = N
+            new_height = int(new_width * img_ratio)
+        assert new_width <= N
+        assert new_height <= N
+        det_scale = image.height / new_height
         resized_img = self.resize(image, width=new_width, height=new_height)
 
-        shape = (640, 640, 3)
-        det_img = np.zeros(shape, dtype=np.uint8)
+        det_img = np.zeros((N, N, 3), dtype=np.uint8)
         det_img[:new_height, :new_width, :] = np.array(resized_img)
 
         scores_list, bboxes_list, kpss_list = self.forward(
@@ -127,8 +130,8 @@ class SCRFDBase:
         scores = np.vstack(scores_list)
         scores_ravel = scores.ravel()
         order = scores_ravel.argsort()[::-1]
-        bboxes = np.vstack(bboxes_list) / det_scale
-        kpss = np.vstack(kpss_list) / det_scale
+        bboxes = np.vstack(bboxes_list) * det_scale
+        kpss = np.vstack(kpss_list) * det_scale
 
         pre_det = np.hstack((bboxes, scores)).astype(np.float32, copy=False)
         pre_det = pre_det[order, :]
@@ -139,19 +142,17 @@ class SCRFDBase:
         kpss = kpss[keep, :, :]  # type: ignore
         return Detections(bboxes=det, keypoints=kpss)
 
-    def nms(self, dets: np.ndarray, nms_thresh: float) -> list:
-        x1 = dets[:, 0]
-        y1 = dets[:, 1]
-        x2 = dets[:, 2]
-        y2 = dets[:, 3]
-        scores = dets[:, 4]
+    def nms(self, dets: np.ndarray, nms_thresh: float) -> list[int]:
+        assert 0.0 <= nms_thresh <= 1.0
+        assert dets.ndim == 2
+        x1, y1, x2, y2, scores = dets.T
 
         areas = (x2 - x1 + 1) * (y2 - y1 + 1)  # type: ignore
         order = scores.argsort()[::-1]
 
         keep = []
         while order.size > 0:
-            i = order[0]
+            i = int(order[0])
             keep.append(i)
 
             xx1 = np.maximum(x1[i], x1[order[1:]])
@@ -168,37 +169,25 @@ class SCRFDBase:
             order = order[inds + 1]
         return keep
 
-    def distance2bbox(
-        self,
-        points: np.ndarray,
-        distance: np.ndarray,
-        max_shape: tuple | None = None,
-    ) -> np.ndarray:
+    def distance2bbox(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
+        N = len(points)
+        assert points.shape == (N, 2)
+        assert distance.shape == (N, 4)
         x1 = points[:, 0] - distance[:, 0]
         y1 = points[:, 1] - distance[:, 1]
         x2 = points[:, 0] + distance[:, 2]
         y2 = points[:, 1] + distance[:, 3]
-        if max_shape is not None:
-            x1 = x1.clamp(min=0, max=max_shape[1])  # type: ignore
-            y1 = y1.clamp(min=0, max=max_shape[0])  # type: ignore
-            x2 = x2.clamp(min=0, max=max_shape[1])  # type: ignore
-            y2 = y2.clamp(min=0, max=max_shape[0])  # type: ignore
         return np.stack([x1, y1, x2, y2], axis=-1)
 
-    def distance2kps(
-        self,
-        points: np.ndarray,
-        distance: np.ndarray,
-        max_shape: tuple | None = None,
-    ) -> np.ndarray:
+    def distance2kps(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
+        N = len(points)
+        assert points.shape == (N, 2)
+        assert distance.shape == (N, 10)
         preds = []
         bound = distance.shape[1]
         for i in range(0, bound, 2):
             px = points[:, i % 2] + distance[:, i]
             py = points[:, i % 2 + 1] + distance[:, i + 1]
-            if max_shape is not None:
-                px = px.clamp(min=0, max=max_shape[1])  # type: ignore
-                py = py.clamp(min=0, max=max_shape[0])  # type: ignore
             preds.append(px)
             preds.append(py)
         return np.stack(preds, axis=-1)
@@ -210,6 +199,8 @@ class SCRFDBase:
         mean: tuple[float, float, float] = (127.5, 127.5, 127.5),
         swap_rb: bool = True,
     ) -> np.ndarray:
+        assert img.ndim == 3
+        assert img.shape[2] == len(mean)
         img = img.astype(dtype=np.float32, copy=True)
         img -= mean
         img *= scaling
