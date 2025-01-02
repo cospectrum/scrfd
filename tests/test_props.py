@@ -39,7 +39,7 @@ def test_resize(img: PILImage, width: int, height: int) -> None:
 
 @settings(
     deadline=5 * 1000,
-    max_examples=75,
+    max_examples=100,
 )
 @given(
     img=arb_img((2, 1000), (2, 1000)),
@@ -52,7 +52,7 @@ def test_scrfd(
     nms: float | None,
     scrfd_model: SCRFD,
 ) -> None:
-    print(f"{img.height=}, {img.width=}")
+    print(f"{img.height=}, {img.width=}, {probability=}, {nms=}")
     threshold = Threshold()
     if nms is not None:
         threshold.nms = nms
