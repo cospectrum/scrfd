@@ -112,7 +112,10 @@ class SCRFDBase:
 
         return scores_list, bboxes_list, kpss_list
 
-    def resize(self, image: PILImage, *, width: int, height: int) -> PILImage:
+    @classmethod
+    def resize(cls, image: PILImage, *, width: int, height: int) -> PILImage:
+        assert height > 0, height
+        assert width > 0, width
         size = (width, height)
         return image.resize(size, resample=Resampling.NEAREST)
 
@@ -156,7 +159,8 @@ class SCRFDBase:
         final_kpss = kpss[order, ...][keep, ...]
         return Detections(bboxes=final_dets, keypoints=final_kpss)
 
-    def nms(self, dets: np.ndarray, nms_thresh: float) -> list[int]:
+    @classmethod
+    def nms(cls, dets: np.ndarray, nms_thresh: float) -> list[int]:
         assert 0.0 <= nms_thresh <= 1.0
         assert dets.ndim == 2
         x1, y1, x2, y2, scores = dets.T
@@ -206,8 +210,9 @@ class SCRFDBase:
             preds.append(py)
         return np.stack(preds, axis=-1)
 
+    @classmethod
     def blob_from_image(
-        self,
+        cls,
         img: np.ndarray,
         scaling: float = 1.0 / 128,
         mean: tuple[float, float, float] = (127.5, 127.5, 127.5),
