@@ -6,13 +6,13 @@ from hypothesis import (
     strategies as st,
 )
 
+from PIL.Image import Image as PILImage
+
 from scrfd import SCRFD
 from scrfd.schemas import Threshold
 from scrfd.base import SCRFDBase
 
-from PIL.Image import Image as PILImage
-
-from .proptest_utils import arbitrary_rgb_image as arb_img
+from .utils.proptest import arbitrary_rgb_image as arb_img
 
 
 @given(
