@@ -38,11 +38,11 @@ jobs:
           python-version-file: ".python-version"
       - name: Install the project
         run: uv sync --all-extras --locked
-      - name: pytest
-        run: uv run pytest
       - name: mypy
         run: uv run mypy .
       - name: ruff check
         run: uv run ruff check
       - name: ruff format
         run: uv run ruff format --check
+      - name: pytest
+        run: uv run pytest
