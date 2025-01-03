@@ -22,7 +22,7 @@ def round_keypoints(kps: FaceKeypoints) -> FaceKeypoints:
         left_eye=round_point(kps.left_eye),
         right_eye=round_point(kps.right_eye),
         nose=round_point(kps.nose),
-        left_mouth=round_point(kps.left_eye),
+        left_mouth=round_point(kps.left_mouth),
         right_mouth=round_point(kps.right_mouth),
     )
 
