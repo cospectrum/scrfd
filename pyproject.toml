@@ -26,7 +26,6 @@ dev = [
     "hypothesis[numpy]>=6.123.2",
     "mypy>=1.13.0",
     "pytest>=8.3.4",
-    "pythonfuzz>=1.0.11",
     "ruff>=0.8.3",
     "types-atheris>=2.3.0.20240831",
 ]
