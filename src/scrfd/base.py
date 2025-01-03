@@ -24,18 +24,6 @@ class Detections:
 class SCRFDBase:
     session: InferenceSession
 
-    @classmethod
-    def fmc(cls) -> int:
-        return 3
-
-    @classmethod
-    def feat_stride_fpn(cls) -> list[int]:
-        return [8, 16, 32]
-
-    @classmethod
-    def num_anchors(cls) -> int:
-        return 2
-
     def output_names(self) -> list[str]:
         outputs = self.session.get_outputs()
         return [out.name for out in outputs]
@@ -49,7 +37,6 @@ class SCRFDBase:
         self, image: np.ndarray, scores_thresh: float
     ) -> tuple[list, list, list]:
         CH, IH, IW = (3, 640, 640)
-        FMC = self.fmc()
 
         assert 0.0 <= scores_thresh <= 1.0
         assert image.shape == (IH, IW, CH)
@@ -65,13 +52,19 @@ class SCRFDBase:
             output_names, {self.input_name(): blob}
         )
         assert len(net_outs) == len(output_names)
-        assert len(net_outs) == len(self.feat_stride_fpn()) + 2 * FMC
+        if len(net_outs) == 9:
+            FMC = 3
+            NUM_ANCORS = 2
+            STRIDES = [8, 16, 32]
+        else:
+            raise ValueError("unknown SCRFD arch")
+        assert len(net_outs) == len(STRIDES) + 2 * FMC
 
         scores_list = []
         bboxes_list = []
         kpss_list = []
 
-        for idx, stride in enumerate(self.feat_stride_fpn()):
+        for idx, stride in enumerate(STRIDES):
             anchor_height = ih // stride
             anchor_width = iw // stride
             anchor_centers = np.stack(
@@ -79,9 +72,9 @@ class SCRFDBase:
                 axis=-1,
             ).astype(np.float32)
             anchor_centers = (anchor_centers * stride).reshape((-1, 2))
-            if self.num_anchors() > 1:
+            if NUM_ANCORS > 1:
                 anchor_centers = np.stack(
-                    [anchor_centers] * self.num_anchors(), axis=1
+                    [anchor_centers] * NUM_ANCORS, axis=1
                 ).reshape((-1, 2))
 
             N = len(anchor_centers)
@@ -128,7 +121,7 @@ class SCRFDBase:
         assert image.mode == "RGB"
 
         img_ratio = image.height / image.width
-        if img_ratio > 1.0:
+        if img_ratio > IH / IW:
             new_height = IH
             new_width = max(1, int(new_height / img_ratio))
         else:
