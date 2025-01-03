@@ -4,7 +4,7 @@ from pathlib import Path
 from scrfd import SCRFD, Face
 from PIL import Image
 
-from .utils import round_face
+from .utils import round_face, point_within_box
 from .truth_faces import TRUTH_FACES
 
 
@@ -28,6 +28,17 @@ def test_num_faces(
 
     faces = scrfd_model.detect(img)
     assert len(faces) == num_faces
+    for face in faces:
+        kps = face.keypoints
+        points = [
+            kps.nose,
+            kps.left_eye,
+            kps.right_eye,
+            kps.left_mouth,
+            kps.right_mouth,
+        ]
+        for point in points:
+            assert point_within_box(point, face.bbox)
 
 
 @pytest.mark.parametrize(
