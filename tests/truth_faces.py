@@ -14,5 +14,21 @@ TRUTH_FACES: dict[str, list[Face]] = {
                 right_mouth=Point(x=409, y=199),
             ),
         ),
-    ]
+    ],
+    "gauss.png": [
+        Face(
+            bbox=Bbox(
+                upper_left=Point(x=376, y=203),
+                lower_right=Point(x=654, y=568),
+            ),
+            probability=0.79,
+            keypoints=FaceKeypoints(
+                left_eye=Point(x=469, y=353),
+                right_eye=Point(x=594, y=346),
+                nose=Point(x=549, y=436.0),
+                left_mouth=Point(x=469.0, y=353.0),
+                right_mouth=Point(x=589, y=482.0),
+            ),
+        )
+    ],
 }

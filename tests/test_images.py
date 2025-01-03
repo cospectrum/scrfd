@@ -45,6 +45,7 @@ def test_num_faces(
     ["sample_filename", "expected_faces"],
     [
         ("newton.png", TRUTH_FACES["newton.png"]),
+        ("gauss.png", TRUTH_FACES["gauss.png"]),
     ],
 )
 def test_truth(
@@ -60,4 +61,6 @@ def test_truth(
     assert len(faces) == len(expected_faces)
     for face, expected_face in zip(faces, expected_faces):
         face = round_face(face)
-        assert face == expected_face
+        assert face.probability == expected_face.probability
+        assert face.bbox == expected_face.bbox
+        assert face.keypoints == expected_face.keypoints
