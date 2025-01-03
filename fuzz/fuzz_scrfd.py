@@ -1,33 +1,36 @@
 #!/usr/bin/python3
 
 import atheris
+import os
 import sys
+import typing
 
-from typing import Any, Callable
+import numpy as np
+
+from PIL import Image
 from PIL.Image import Image as PILImage
+
+from scrfd import SCRFD
 
 
 def main() -> None:
     SCRFD_PATH = "../models/scrfd.onnx"
-
+    os.path.exists(SCRFD_PATH)
+    atheris.instrument_all()  # type: ignore
     atheris.Setup(sys.argv, fuzz_scrfd(SCRFD_PATH))
     atheris.Fuzz()
 
 
-@atheris.instrument_func  # type: ignore
-def fuzz_scrfd(model_path: str) -> Callable[[bytes], None]:
-    from scrfd import SCRFD
-
+def fuzz_scrfd(model_path: str) -> typing.Callable[[bytes], None]:
     scrfd_model = SCRFD.from_path(model_path)
 
     def fn(img: PILImage) -> None:
-        print(f"(w, h)={(img.width, img.height)}")
         _ = scrfd_model.detect(img)
 
     return lambda data: test_one_input(data, fn)
 
 
-def test_one_input(data: bytes, fn: Callable[[PILImage], Any]) -> None:
+def test_one_input(data: bytes, fn: typing.Callable[[PILImage], typing.Any]) -> None:
     img = random_rgb_image(data)
     if img is None:
         return
@@ -35,9 +38,6 @@ def test_one_input(data: bytes, fn: Callable[[PILImage], Any]) -> None:
 
 
 def random_rgb_image(data: bytes) -> PILImage | None:
-    import numpy as np
-    from PIL import Image
-
     CH = 3
     data = data[: len(data) - len(data) % CH]
     assert len(data) % CH == 0
