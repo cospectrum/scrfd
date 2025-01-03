@@ -29,3 +29,10 @@ def round_keypoints(kps: FaceKeypoints) -> FaceKeypoints:
 
 def round_point(point: Point) -> Point:
     return Point(x=int(point.x), y=int(point.y))
+
+
+def point_within_box(point: Point, box: Bbox) -> bool:
+    return (
+        box.upper_left.x <= point.x <= box.lower_right.x
+        and box.upper_left.y <= point.y <= box.lower_right.y
+    )

@@ -38,11 +38,11 @@ def test_resize(img: PILImage, width: int, height: int) -> None:
 
 
 @settings(
-    deadline=5 * 1000,
-    max_examples=100,
+    deadline=3 * 1000,
+    max_examples=200,
 )
 @given(
-    img=arb_img((2, 1000), (2, 1000)),
+    img=arb_img((1, 1000), (1, 1000)),
     probability=st.none() | st.floats(0.0, 1.0),
     nms=st.none() | st.floats(0.0, 1.0),
 )

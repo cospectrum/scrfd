@@ -91,6 +91,10 @@ class SCRFDBase:
             bbox_preds = net_outs[idx + FMC] * stride
             kps_preds = net_outs[idx + 2 * FMC] * stride
 
+            assert scores.shape == (N, 1) or scores.shape == (1, N, 1)
+            assert bbox_preds.shape == (N, 4) or bbox_preds.shape == (1, N, 4)
+            assert kps_preds.shape == (N, 10) or kps_preds.shape == (1, N, 10)
+
             scores = scores.reshape((N, 1))
             bbox_preds = bbox_preds.reshape((N, 4))
             kps_preds = kps_preds.reshape((N, 10))
@@ -120,22 +124,22 @@ class SCRFDBase:
         return image.resize(size, resample=Resampling.NEAREST)
 
     def detect(self, image: PILImage, threshold: Threshold) -> Detections:
-        N = 640
+        (IH, IW, CH) = (640, 640, 3)
         assert image.mode == "RGB"
 
         img_ratio = image.height / image.width
         if img_ratio > 1.0:
-            new_height = N
-            new_width = int(new_height / img_ratio)
+            new_height = IH
+            new_width = max(1, int(new_height / img_ratio))
         else:
-            new_width = N
-            new_height = int(new_width * img_ratio)
-        assert new_width <= N
-        assert new_height <= N
+            new_width = IW
+            new_height = max(1, int(new_width * img_ratio))
+        assert 1 <= new_width <= IW, new_width
+        assert 1 <= new_height <= IH, new_height
         det_scale = image.height / new_height
         resized_img = self.resize(image, width=new_width, height=new_height)
 
-        det_img = np.zeros((N, N, 3), dtype=np.uint8)
+        det_img = np.zeros((IH, IW, CH), dtype=np.uint8)
         det_img[:new_height, :new_width, :] = np.array(resized_img)
 
         scores_list, bboxes_list, kpss_list = self.forward(
