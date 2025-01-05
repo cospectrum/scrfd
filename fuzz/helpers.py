@@ -23,7 +23,9 @@ class FuzzHelper:
 
     def get_int(self, min_int: int = MIN_INT, max_int: int = MAX_INT) -> int:
         assert min_int <= max_int
-        return self.fdp.ConsumeIntInRange(min_int, max_int)
+        ret = self.fdp.ConsumeIntInRange(min_int, max_int)
+        assert min_int <= ret <= max_int
+        return ret
 
     def get_uint(self, max_uint: int = MAX_UINT) -> int:
         return self.get_int(0, max_uint)
