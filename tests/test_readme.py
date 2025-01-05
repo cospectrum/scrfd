@@ -2,6 +2,7 @@ from pathlib import Path
 
 Script = str
 
+
 def test_readme() -> None:
     readme_path = Path("./README.md")
     scripts = parse_readme_code(readme_path, "```python", "```")
