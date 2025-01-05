@@ -10,6 +10,10 @@ from PIL.Image import (
 from .schemas import Threshold
 
 
+ListOfArray = list[np.ndarray]
+ForwardResult = tuple[ListOfArray, ListOfArray, ListOfArray]
+
+
 @dataclass
 class Detections:
     bboxes: np.ndarray
@@ -17,7 +21,12 @@ class Detections:
 
     @staticmethod
     def empty() -> Detections:
-        return Detections(np.array([]), np.array([]))
+        N = 0
+        KPS = 5
+        return Detections(
+            bboxes=np.array([]).reshape((N, 5)),
+            keypoints=np.array([]).reshape((N, KPS, 2)),
+        )
 
 
 @dataclass
@@ -33,10 +42,9 @@ class SCRFDBase:
         assert len(inputs) == 1
         return inputs[0].name
 
-    def forward(
-        self, image: np.ndarray, scores_thresh: float
-    ) -> tuple[list, list, list]:
+    def forward(self, image: np.ndarray, scores_thresh: float) -> ForwardResult:
         CH, IH, IW = (3, 640, 640)
+        KPS = 5
 
         assert 0.0 <= scores_thresh <= 1.0
         assert image.shape == (IH, IW, CH)
@@ -76,7 +84,6 @@ class SCRFDBase:
                 anchor_centers = np.stack(
                     [anchor_centers] * NUM_ANCORS, axis=1
                 ).reshape((-1, 2))
-
             N = len(anchor_centers)
             assert anchor_centers.shape == (N, 2)
 
@@ -86,21 +93,25 @@ class SCRFDBase:
 
             assert scores.shape == (N, 1) or scores.shape == (1, N, 1)
             assert bbox_preds.shape == (N, 4) or bbox_preds.shape == (1, N, 4)
-            assert kps_preds.shape == (N, 10) or kps_preds.shape == (1, N, 10)
+            assert kps_preds.shape == (N, 2 * KPS) or kps_preds.shape == (1, N, 2 * KPS)
             scores = scores.reshape((N, 1))
             bbox_preds = bbox_preds.reshape((N, 4))
-            kps_preds = kps_preds.reshape((N, 10))
+            kps_preds = kps_preds.reshape((N, 2 * KPS))
 
             bboxes = self.distance2bbox(anchor_centers, bbox_preds)
+            assert bboxes.shape == (N, 4)
             kpss = self.distance2kps(anchor_centers, kps_preds)
-            kpss = kpss.reshape((kpss.shape[0], -1, 2))
+            assert kpss.shape == (N, 2 * KPS)
+            kpss = kpss.reshape((N, KPS, 2))
 
-            indexes = np.where(scores >= scores_thresh)[0]
-            assert indexes.shape == (len(indexes),)
+            indexes: tuple[np.ndarray, ...] = np.where(scores >= scores_thresh)
+            assert len(indexes) == 2, len(indexes)
+            likely = indexes[0]
+            assert likely.shape == (len(likely),)
 
-            final_scores = scores[indexes]
-            final_bboxes = bboxes[indexes]
-            final_kpss = kpss[indexes]
+            final_scores = scores[likely]
+            final_bboxes = bboxes[likely]
+            final_kpss = kpss[likely]
             assert len(final_scores) == len(final_bboxes) == len(final_kpss)
             scores_list.append(final_scores)
             bboxes_list.append(final_bboxes)
@@ -108,8 +119,8 @@ class SCRFDBase:
 
         return scores_list, bboxes_list, kpss_list
 
-    @classmethod
-    def resize(cls, image: PILImage, *, width: int, height: int) -> PILImage:
+    @staticmethod
+    def resize(image: PILImage, *, width: int, height: int) -> PILImage:
         assert height > 0, height
         assert width > 0, width
         size = (width, height)
@@ -137,8 +148,9 @@ class SCRFDBase:
         scores_list, bboxes_list, kpss_list = self.forward(
             det_img, threshold.probability
         )
+        N = len(scores_list)
         assert len(scores_list) == len(bboxes_list) == len(kpss_list)
-        if len(scores_list) == 0:
+        if N == 0:
             return Detections.empty()
 
         scores = np.vstack(scores_list)
@@ -155,8 +167,8 @@ class SCRFDBase:
         final_kpss = kpss[order, ...][keep, ...]
         return Detections(bboxes=final_dets, keypoints=final_kpss)
 
-    @classmethod
-    def nms(cls, dets: np.ndarray, nms_thresh: float) -> list[int]:
+    @staticmethod
+    def nms(dets: np.ndarray, nms_thresh: float) -> list[int]:
         assert 0.0 <= nms_thresh <= 1.0
         assert dets.ndim == 2
         x1, y1, x2, y2, scores = dets.T
@@ -183,7 +195,8 @@ class SCRFDBase:
             order = order[inds + 1]
         return keep
 
-    def distance2bbox(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def distance2bbox(points: np.ndarray, distance: np.ndarray) -> np.ndarray:
         N = len(points)
         assert points.shape == (N, 2)
         assert distance.shape == (N, 4), distance.shape
@@ -193,7 +206,8 @@ class SCRFDBase:
         y2 = points[:, 1] + distance[:, 3]
         return np.stack([x1, y1, x2, y2], axis=1)
 
-    def distance2kps(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
+    @staticmethod
+    def distance2kps(points: np.ndarray, distance: np.ndarray) -> np.ndarray:
         KPS = 5
         N = len(points)
         assert points.shape == (N, 2)
@@ -207,9 +221,8 @@ class SCRFDBase:
         assert len(preds) == 2 * KPS
         return np.stack(preds, axis=1)
 
-    @classmethod
+    @staticmethod
     def blob_from_image(
-        cls,
         img: np.ndarray,
         scaling: float = 1.0 / 128,
         mean: tuple[float, float, float] = (127.5, 127.5, 127.5),

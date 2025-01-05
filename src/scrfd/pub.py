@@ -34,6 +34,7 @@ class SCRFD:
 
 
 def _parse_detections(detections: Detections) -> list[Face]:
+    KPS = 5
     bboxes = detections.bboxes
     keypoints = detections.keypoints
 
@@ -42,7 +43,7 @@ def _parse_detections(detections: Detections) -> list[Face]:
     if N == 0:
         return []
     assert bboxes.shape == (N, 5)
-    assert keypoints.shape == (N, 5, 2)
+    assert keypoints.shape == (N, KPS, 2)
 
     faces = []
     for bbox, kps in zip(bboxes, keypoints):
@@ -53,6 +54,7 @@ def _parse_detections(detections: Detections) -> list[Face]:
         bbox = Bbox(upper_left=upper_left, lower_right=lower_right)
 
         kps = [Point(x=float(x), y=float(y)) for x, y in kps]
+        assert len(kps) == KPS
         kps = FaceKeypoints(
             left_eye=kps[0],
             right_eye=kps[1],
