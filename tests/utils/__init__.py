@@ -36,3 +36,17 @@ def point_within_box(point: Point, box: Bbox) -> bool:
         box.upper_left.x <= point.x <= box.lower_right.x
         and box.upper_left.y <= point.y <= box.lower_right.y
     )
+
+
+def keypoints_within_box(kps: FaceKeypoints, box: Bbox) -> bool:
+    points = [
+        kps.nose,
+        kps.left_eye,
+        kps.right_eye,
+        kps.left_mouth,
+        kps.right_mouth,
+    ]
+    for point in points:
+        if not point_within_box(point, box):
+            return False
+    return True

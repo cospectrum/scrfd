@@ -12,6 +12,7 @@ from scrfd import SCRFD
 from scrfd.schemas import Threshold
 from scrfd.base import SCRFDBase
 
+from .utils import keypoints_within_box
 from .utils.proptest import arbitrary_rgb_image as arb_img
 
 
