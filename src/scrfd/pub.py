@@ -26,9 +26,9 @@ class SCRFD:
         return SCRFD.from_session(session)
 
     def detect(self, image: PILImage, threshold: Threshold | None = None) -> list[Face]:
+        assert image.mode == "RGB"
         if threshold is None:
             threshold = Threshold()
-        assert image.mode == "RGB"
         detections = self._inner.detect(image, threshold=threshold)
         return _parse_detections(detections)
 

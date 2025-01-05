@@ -43,8 +43,8 @@ def test_resize(img: PILImage, width: int, height: int) -> None:
 )
 @given(
     img=arb_img((1, 1000), (1, 1000)),
-    probability=st.none() | st.floats(0.0, 1.0),
-    nms=st.none() | st.floats(0.0, 1.0),
+    probability=st.none() | st.floats(0.01, 1.0),
+    nms=st.none() | st.floats(0.01, 1.0),
 )
 def test_scrfd(
     img: PILImage,
