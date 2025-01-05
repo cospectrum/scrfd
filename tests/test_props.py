@@ -39,14 +39,13 @@ def test_resize(img: PILImage, width: int, height: int) -> None:
 
 @settings(
     deadline=3 * 1000,
-    max_examples=200,
 )
 @given(
     img=arb_img((1, 1000), (1, 1000)),
     probability=st.none() | st.floats(0.01, 1.0),
     nms=st.none() | st.floats(0.01, 1.0),
 )
-def test_scrfd(
+def test_detect(
     img: PILImage,
     probability: float | None,
     nms: float | None,

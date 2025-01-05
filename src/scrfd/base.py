@@ -87,7 +87,6 @@ class SCRFDBase:
             assert scores.shape == (N, 1) or scores.shape == (1, N, 1)
             assert bbox_preds.shape == (N, 4) or bbox_preds.shape == (1, N, 4)
             assert kps_preds.shape == (N, 10) or kps_preds.shape == (1, N, 10)
-
             scores = scores.reshape((N, 1))
             bbox_preds = bbox_preds.reshape((N, 4))
             kps_preds = kps_preds.reshape((N, 10))
@@ -192,20 +191,21 @@ class SCRFDBase:
         y1 = points[:, 1] - distance[:, 1]
         x2 = points[:, 0] + distance[:, 2]
         y2 = points[:, 1] + distance[:, 3]
-        return np.stack([x1, y1, x2, y2], axis=-1)
+        return np.stack([x1, y1, x2, y2], axis=1)
 
     def distance2kps(self, points: np.ndarray, distance: np.ndarray) -> np.ndarray:
+        KPS = 5
         N = len(points)
         assert points.shape == (N, 2)
-        assert distance.shape == (N, 10), distance.shape
+        assert distance.shape == (N, 2 * KPS), distance.shape
         preds = []
-        bound = distance.shape[1]
-        for i in range(0, bound, 2):
-            px = points[:, i % 2] + distance[:, i]
-            py = points[:, i % 2 + 1] + distance[:, i + 1]
+        for i in range(0, 2 * KPS, 2):
+            px = points[:, 0] + distance[:, i]
+            py = points[:, 1] + distance[:, i + 1]
             preds.append(px)
             preds.append(py)
-        return np.stack(preds, axis=-1)
+        assert len(preds) == 2 * KPS
+        return np.stack(preds, axis=1)
 
     @classmethod
     def blob_from_image(

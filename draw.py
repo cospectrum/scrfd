@@ -13,7 +13,7 @@ def main() -> None:
 
     faces = face_detector.detect(image)
     result = draw_faces(image, faces)
-    result.save("draw_result.jpg")
+    result.save("draw_result.png")
 
 
 def draw_faces(
