@@ -4,9 +4,9 @@ Script = str
 
 def test_readme() -> None:
     readme_path = Path("./README.md")
-    start_tag = "```python"
-    end_tag = "```"
-    scripts = parse_readme_code(readme_path, start_tag, end_tag)
+    scripts = parse_readme_code(readme_path, "```python", "```")
+    scripts += parse_readme_code(readme_path, "```py", "```")
+    assert len(scripts) > 0
     for script in scripts:
         print("\n# executing the following script")
         print(script)
