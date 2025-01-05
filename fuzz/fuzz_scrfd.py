@@ -9,8 +9,10 @@ from scrfd import SCRFD
 from helpers import FuzzHelper
 
 
+SCRFD_PATH = "../models/scrfd.onnx"
+
+
 def main() -> None:
-    SCRFD_PATH = "../models/scrfd.onnx"
     os.path.exists(SCRFD_PATH)
     atheris.instrument_all()  # type: ignore
     atheris.Setup(sys.argv, fuzz_scrfd(SCRFD_PATH))
@@ -23,11 +25,11 @@ def fuzz_scrfd(model_path: str) -> typing.Callable[[bytes], None]:
     def fn(data: bytes) -> None:
         helper = FuzzHelper(data)
 
-        img = helper.get_image()
-        assert img.mode == "RGB"
+        img = helper.get_rgb_image()
+        if img is None:
+            return
         if img.width == 0:
             return
-
         _ = scrfd_model.detect(img)
 
     return fn
