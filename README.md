@@ -11,7 +11,7 @@ Efficient face detection using SCRFD.
 pip install scrfd
 ```
 
-```py
+```python
 from scrfd import SCRFD, Threshold
 from PIL import Image
 
