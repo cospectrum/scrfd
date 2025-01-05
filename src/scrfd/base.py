@@ -119,7 +119,7 @@ class SCRFDBase:
     def detect(self, image: PILImage, threshold: Threshold) -> Detections:
         (IH, IW, CH) = (640, 640, 3)
         assert image.mode == "RGB"
-
+        assert image.width > 0
         img_ratio = image.height / image.width
         if img_ratio > IH / IW:
             new_height = IH
