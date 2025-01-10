@@ -28,4 +28,4 @@ for face in faces:
     print(f"{bbox=}, {kps=}, {score=}")
 ```
 
-<img align="middle" src="./images/readme.png" alt="face detection">
+<img align="middle" src="./readme.png" alt="face detection">
