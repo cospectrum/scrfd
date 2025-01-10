@@ -34,6 +34,7 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Set up Python
         uses: actions/setup-python@v5
+        working-directory: ./scrfd-python
         with:
           python-version-file: ".python-version"
       - name: Install the project
