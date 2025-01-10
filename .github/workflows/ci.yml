@@ -24,8 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          working-directory: ./scrfd-python
-          python-version-file: ".python-version"
+          python-version-file: "./scrfd-python/.python-version"
       - name: Install the project
         run: uv sync --all-extras --locked
       - name: mypy
