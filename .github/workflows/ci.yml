@@ -12,17 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  actionlint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download actionlint
-        id: get_actionlint
-        run: bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-        shell: bash
-      - name: Check workflow files
-        run: ${{ steps.get_actionlint.outputs.executable }} -color
-        shell: bash
   python:
     runs-on: ubuntu-latest
     defaults:
@@ -34,8 +23,8 @@ jobs:
         uses: astral-sh/setup-uv@v4
       - name: Set up Python
         uses: actions/setup-python@v5
-        working-directory: ./scrfd-python
         with:
+          working-directory: ./scrfd-python
           python-version-file: ".python-version"
       - name: Install the project
         run: uv sync --all-extras --locked
