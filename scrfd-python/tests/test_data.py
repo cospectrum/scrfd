@@ -8,7 +8,8 @@ from .utils import keypoints_within_box, round_face
 from .truth_faces import TRUTH_FACES
 
 
-DATA_ROOT = Path("./images/")
+DATA_ROOT = Path("../images/")
+assert DATA_ROOT.exists()
 
 
 @pytest.mark.parametrize(
