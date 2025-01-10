@@ -15,7 +15,7 @@ assert DATA_ROOT.exists()
 @pytest.mark.parametrize(
     ["sample_filename", "num_faces"],
     [
-        ("solvay_conference_1927.jpg", 29),
+        ("solvay_conference_1927.png", 29),
     ],
 )
 def test_num_faces(

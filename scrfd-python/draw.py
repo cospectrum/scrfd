@@ -5,10 +5,10 @@ from scrfd import SCRFD, Face, Point
 
 
 def main() -> None:
-    model_path = "./models/scrfd.onnx"
+    model_path = "../models/scrfd.onnx"
     face_detector = SCRFD.from_path(model_path)
 
-    image_path = "./images/solvay_conference_1927.jpg"
+    image_path = "../images/solvay_conference_1927.png"
     image = Image.open(image_path).convert("RGB")
 
     faces = face_detector.detect(image)
@@ -19,7 +19,7 @@ def main() -> None:
 def draw_faces(
     image: PILImage,
     faces: list[Face],
-    radius: int = 3,
+    radius: int = 4,
     box_width: int = 4,
 ) -> PILImage:
     image = image.copy()
