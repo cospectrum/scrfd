@@ -18,7 +18,7 @@ from PIL import Image
 face_detector = SCRFD.from_path("./models/scrfd.onnx")
 threshold = Threshold(probability=0.4)
 
-image = Image.open("./images/solvay_conference_1927.jpg").convert("RGB")
+image = Image.open("./images/solvay_conference_1927.png").convert("RGB")
 faces = face_detector.detect(image, threshold=threshold)
 
 for face in faces:
@@ -28,4 +28,4 @@ for face in faces:
     print(f"{bbox=}, {kps=}, {score=}")
 ```
 
-<img align="middle" src="https://github.com/cospectrum/scrfd/blob/main/images/readme.jpg?raw=True" alt="face detection">
+<img align="middle" src="./readme.png" alt="face detection">
