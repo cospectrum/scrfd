@@ -7,7 +7,7 @@ from scrfd.base import SCRFDBase
 
 @pytest.fixture(scope="package")
 def scrfd_model() -> SCRFD:
-    path = Path("./models/scrfd.onnx")
+    path = Path("../models/scrfd.onnx")
     assert path.exists()
     return SCRFD.from_path(path)
 
