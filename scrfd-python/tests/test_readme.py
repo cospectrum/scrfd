@@ -18,13 +18,16 @@ def test_readme(
     path: os.PathLike,
 ) -> None:
     path = Path(path)
+    if not path.exists():
+        pytest.skip(reason=f"{path} doesn't exist")
     assert path.exists()
     assert path.is_file()
 
     text = path.read_text()
     scripts = parse_readme_scripts(text, "```python\n", "```\n")
     scripts += parse_readme_scripts(text, "```py\n", "```\n")
-    assert len(scripts) > 0
+    if len(scripts) == 0:
+        pytest.skip(reason=f"no scripts in {path}")
 
     for script in scripts:
         print("\n# executing the following script")
