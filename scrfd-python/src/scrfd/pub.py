@@ -16,7 +16,7 @@ class SCRFD:
 
     @staticmethod
     def from_session(session: InferenceSession) -> SCRFD:
-        return SCRFD(SCRFDBase(session))
+        return SCRFD(SCRFDBase.from_session(session))
 
     @staticmethod
     def from_path(
