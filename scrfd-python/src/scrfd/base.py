@@ -32,6 +32,26 @@ class Detections:
 @dataclass
 class SCRFDBase:
     session: InferenceSession
+    fmc: int
+    num_anchors: int
+    strides: list[int]
+
+    @staticmethod
+    def from_session(session: InferenceSession):
+        num_outputs = len(session.get_outputs())
+        if num_outputs == 9:
+            fmc = 3
+            num_anchors = 2
+            strides = [8, 16, 32]
+        else:
+            raise ValueError("unknown SCRFD architecture")
+        assert num_outputs == len(strides) + 2 * fmc
+        return SCRFDBase(
+            session=session,
+            fmc=fmc,
+            num_anchors=num_anchors,
+            strides=strides,
+        )
 
     def output_names(self) -> list[str]:
         outputs = self.session.get_outputs()
@@ -60,19 +80,13 @@ class SCRFDBase:
             output_names, {self.input_name(): blob}
         )
         assert len(net_outs) == len(output_names)
-        if len(net_outs) == 9:
-            FMC = 3
-            NUM_ANCORS = 2
-            STRIDES = [8, 16, 32]
-        else:
-            raise ValueError("unknown SCRFD arch")
-        assert len(net_outs) == len(STRIDES) + 2 * FMC
+        assert len(net_outs) == len(self.strides) + 2 * self.fmc
 
         scores_list = []
         bboxes_list = []
         kpss_list = []
 
-        for idx, stride in enumerate(STRIDES):
+        for idx, stride in enumerate(self.strides):
             anchor_height = ih // stride
             anchor_width = iw // stride
             anchor_centers = np.stack(
@@ -80,16 +94,16 @@ class SCRFDBase:
                 axis=-1,
             ).astype(np.float32)
             anchor_centers = (anchor_centers * stride).reshape((-1, 2))
-            if NUM_ANCORS > 1:
+            if self.num_anchors > 1:
                 anchor_centers = np.stack(
-                    [anchor_centers] * NUM_ANCORS, axis=1
+                    [anchor_centers] * self.num_anchors, axis=1
                 ).reshape((-1, 2))
             N = len(anchor_centers)
             assert anchor_centers.shape == (N, 2)
 
             scores = net_outs[idx]
-            bbox_preds = net_outs[idx + FMC] * stride
-            kps_preds = net_outs[idx + 2 * FMC] * stride
+            bbox_preds = net_outs[idx + self.fmc] * stride
+            kps_preds = net_outs[idx + 2 * self.fmc] * stride
 
             assert scores.shape == (N, 1) or scores.shape == (1, N, 1)
             assert bbox_preds.shape == (N, 4) or bbox_preds.shape == (1, N, 4)
