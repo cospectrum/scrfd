@@ -85,7 +85,7 @@ impl Scrfd {
     }
 
     fn forward(&self, blob: Array4<f32>, score_threshold: f32) -> TractResult<RawFaces> {
-        assert!(0.0 <= score_threshold && score_threshold <= 1.0);
+        assert!((0.0..=1.0).contains(&score_threshold));
         assert_eq!(blob.shape(), [1, CH, IH, IW]);
         let outs = self.model.run(tvec!(Tensor::from(blob).into()))?;
         assert_eq!(outs.len(), self.options.num_of_outputs());
@@ -204,7 +204,7 @@ where
 fn nms(boxes: &Array2<f32>, threshold: f32) -> Vec<usize> {
     let n = boxes.nrows();
     assert_eq!(boxes.shape(), [n, 4]);
-    assert!(0.0 <= threshold && threshold <= 1.0);
+    assert!((0.0..=1.0).contains(&threshold));
 
     let x1 = boxes.column(0);
     let y1 = boxes.column(1);
