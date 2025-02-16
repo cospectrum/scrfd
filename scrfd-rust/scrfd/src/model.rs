@@ -110,7 +110,7 @@ impl Scrfd {
         let boxes = boxes.mapv_into(|el| el * scale);
         let keypoints = keypoints.mapv_into(|el| el * scale);
 
-        let order = reversed_argsort(&scores.as_slice().unwrap());
+        let order = reversed_argsort(scores.as_slice().unwrap());
 
         let boxes = boxes.take(&order);
         let scores = scores.take(&order);
@@ -257,7 +257,7 @@ fn nms(boxes: &Array2<f32>, scores: &[f32], threshold: f32) -> Vec<usize> {
 
     let areas = (&x2 - &x1 + 1.0) * (&y2 - &y1 + 1.0);
     let mut keep = Vec::new();
-    let mut order = reversed_argsort(&scores);
+    let mut order = reversed_argsort(scores);
 
     while let Some(&i) = order.first() {
         keep.push(i);
