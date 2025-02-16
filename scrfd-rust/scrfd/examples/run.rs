@@ -12,8 +12,6 @@ fn main() -> TractResult<()> {
         .decode()?
         .into_rgb8();
     let faces = face_detector.detect(&img)?;
-    for face in faces {
-        dbg!(face);
-    }
+    dbg!(&faces);
     Ok(())
 }
