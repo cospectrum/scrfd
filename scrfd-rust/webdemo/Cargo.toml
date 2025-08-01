@@ -1,0 +1,20 @@
+[package]
+name = "webdemo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+leptos = { version = "0.7.7", features = ["csr"] }
+leptos-use = { version = "0.15.6", default-features = false, features = [
+    "use_user_media",
+] }
+scrfd = { version = "0.1.0", path = "../scrfd" }
+web-sys = { version = "0.3", features = [
+    "CanvasRenderingContext2d",
+    "HtmlCanvasElement",
+    "HtmlVideoElement",
+    "ImageData",
+    "Window",
+] }
+wasm-bindgen = "0.2"
+anyhow = "1.0.98"
