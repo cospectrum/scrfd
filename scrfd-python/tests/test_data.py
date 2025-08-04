@@ -1,14 +1,13 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 from PIL import Image
 
 from scrfd import SCRFD, Face
 from scrfd.common import draw_faces
 
-from .utils import keypoints_within_box, round_face
 from .truth_faces import TRUTH_FACES
-
+from .utils import keypoints_within_box, round_face
 
 DATA_ROOT = Path("../images/")
 TRUTH_ROOT = Path("./tests/truth")

@@ -1,4 +1,4 @@
-from scrfd import Face, Bbox, Point, FaceKeypoints
+from scrfd import Bbox, Face, FaceKeypoints, Point
 
 
 def round_face(face: Face) -> Face:

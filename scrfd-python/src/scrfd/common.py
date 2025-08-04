@@ -3,7 +3,6 @@ from PIL.Image import Image as PILImage
 
 from .schemas import Face, Point
 
-
 _Color = float | tuple[int, ...] | str
 
 

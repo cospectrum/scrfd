@@ -1,5 +1,4 @@
-from scrfd import Face, Bbox, FaceKeypoints, Point
-
+from scrfd import Bbox, Face, FaceKeypoints, Point
 
 TRUTH_FACES: dict[str, list[Face]] = {
     "newton.png": [

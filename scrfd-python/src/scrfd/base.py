@@ -1,15 +1,16 @@
 from __future__ import annotations
-import numpy as np
-import logging
 
+import logging
 from dataclasses import dataclass
+
+import numpy as np
 from onnxruntime import InferenceSession  # type: ignore
 from PIL.Image import (
     Image as PILImage,
     Resampling,
 )
-from .schemas import Threshold
 
+from .schemas import Threshold
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
-import atheris
 import os
 import sys
 import typing
 
-from scrfd import SCRFD
+import atheris
 from helpers import FuzzHelper
 
+from scrfd import SCRFD
 
 SCRFD_PATH = "../models/scrfd.onnx"
 

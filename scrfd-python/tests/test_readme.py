@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
+
 import pytest
 
-from pathlib import Path
 from .utils import path as path_utils
 
 Script = str

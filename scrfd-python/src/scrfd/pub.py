@@ -1,13 +1,14 @@
 from __future__ import annotations
-import os
 
+import os
+from collections.abc import Sequence
 from dataclasses import dataclass
+
 from onnxruntime import InferenceSession  # type: ignore
 from PIL.Image import Image as PILImage
-from typing import Sequence
 
-from .base import SCRFDBase, Detections
-from .schemas import Face, Point, Bbox, FaceKeypoints, Threshold
+from .base import Detections, SCRFDBase
+from .schemas import Bbox, Face, FaceKeypoints, Point, Threshold
 
 
 @dataclass
