@@ -3,19 +3,39 @@ name = "webdemo"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "main"
+path = "src/bin/main.rs"
+
+[[bin]]
+name = "worker"
+path = "src/bin/worker.rs"
+
 [dependencies]
 leptos = { version = "0.7.7", features = ["csr"] }
 leptos-use = { version = "0.15.6", default-features = false, features = [
     "use_user_media",
 ] }
-scrfd = { version = "0.1.0", path = "../scrfd" }
+scrfd = { version = "0.1.0", path = "../scrfd-rust" }
 web-sys = { version = "0.3", features = [
     "CanvasRenderingContext2d",
     "HtmlCanvasElement",
     "HtmlVideoElement",
     "ImageData",
-    "Window",
 ] }
 wasm-bindgen = "0.2"
 anyhow = "1.0.98"
 imageproc = { version = "0.25.0", default-features = false }
+web-time = "1.1.0"
+gloo-worker = { version = "0.5.0", features = ["futures"] }
+futures = "0.3.31"
+serde = "1.0.219"
+base64 = "0.22.1"
+console_error_panic_hook = "0.1.7"
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    .player {
+      display: flex;
+      gap: 10px;
+    }
+
+    .frame {
+      width: 100%;
+    }
+
+    @media (orientation: landscape) {
+      .player {
+        flex-direction: row;
+      }
+    }
+
+    @media (orientation: portrait) {
+      .player {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <link data-trunk rel="rust" href="Cargo.toml" data-bin="main" data-type="main" />
+  <link data-trunk rel="rust" href="Cargo.toml" data-bin="worker" data-type="worker" />
+</body>
+
+</html>

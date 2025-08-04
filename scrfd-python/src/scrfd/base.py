@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import logging
 
 from dataclasses import dataclass
 from onnxruntime import InferenceSession  # type: ignore
@@ -8,6 +9,9 @@ from PIL.Image import (
     Resampling,
 )
 from .schemas import Threshold
+
+
+logger = logging.getLogger(__name__)
 
 
 ListOfArray = list[np.ndarray]
@@ -39,6 +43,7 @@ class SCRFDBase:
     @staticmethod
     def from_session(session: InferenceSession):
         num_outputs = len(session.get_outputs())
+        logger.debug("num of output: %s", num_outputs)
         if num_outputs == 9:
             fmc = 3
             num_anchors = 2

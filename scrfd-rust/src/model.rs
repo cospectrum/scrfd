@@ -1,11 +1,9 @@
 use crate::{Bbox, Face, FaceKeypoints, Point, Threshold};
 use std::{io, path::Path};
 
+use anyhow::{bail, ensure};
 use tract_ndarray::{prelude::*, Array, Array2, Array4, Data, RawData, RemoveAxis};
-use tract_onnx::{
-    prelude::{tract_itertools::Itertools, *},
-    tract_core::anyhow::{bail, ensure},
-};
+use tract_onnx::prelude::{tract_itertools::Itertools, *};
 
 type Model = RunnableModel<TypedFact, Box<dyn TypedOp>, Graph<TypedFact, Box<dyn TypedOp>>>;
 
