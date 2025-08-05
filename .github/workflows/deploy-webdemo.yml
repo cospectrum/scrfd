@@ -44,9 +44,10 @@ jobs:
       # - name: Download and install tailwindcss binary
       #   run: npm install -D tailwindcss && npx tailwindcss -i <INPUT/PATH.css> -o <OUTPUT/PATH.css>  # run tailwind
 
-
-      - name: Download and install Trunk binary
-        run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.18.4/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
+      - uses: jetli/trunk-action@v0.5.1
+        with:
+          # Optional version of trunk to install(eg. 'v0.21.14', 'latest')
+          version: 'v0.21.14'
 
       - name: Build with Trunk
         # "${GITHUB_REPOSITORY#*/}" evaluates into the name of the repository
