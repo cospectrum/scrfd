@@ -21,14 +21,13 @@ pub async fn ModelReactor(mut scope: ReactorScope<ImageBuf, ImageBuf>) {
     log!("starting reactor loop");
 
     loop {
-        if let Err(e) = handle_image(&mut scope, &model).await {
-            error!("reactor failed to handle image: {:?}", e);
+        if let Err(e) = handle_iteration(&mut scope, &model).await {
+            error!("reactor failed: {:?}", e);
         };
-        log!("reactor handled image successfully");
     }
 }
 
-async fn handle_image(
+async fn handle_iteration(
     scope: &mut ReactorScope<ImageBuf, ImageBuf>,
     model: &scrfd::Scrfd,
 ) -> anyhow::Result<()> {
