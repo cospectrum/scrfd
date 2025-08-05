@@ -171,3 +171,18 @@ jobs:
         run: cargo doc --no-deps --all-features
         env:
           RUSTDOCFLAGS: -D warnings --cfg docsrs
+
+  cargo-check-wasm:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./webdemo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+      - name: cargo check
+        run: cargo check --target wasm32-unknown-unknown
+        env:
+          RUSTFLAGS: -D warnings

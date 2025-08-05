@@ -30,11 +30,12 @@ jobs:
       run:
         working-directory: ./webdemo
     steps:
-      - uses: actions/checkout@v4 # repo checkout
+      - uses: actions/checkout@v4
 
-      # Install Rust Nightly Toolchain, with Clippy & Rustfmt
       - name: Install nightly Rust
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
 
       - name: Add WASM target
         run: rustup target add wasm32-unknown-unknown
@@ -75,7 +76,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload dist dir
-          path: './dist'
+          path: './webdemo/dist'
 
       - name: Deploy to GitHub Pages 🚀
         id: deployment
