@@ -5,7 +5,7 @@
 [github]: https://img.shields.io/badge/github-cospectrum/scrfd-8da0cb?logo=github
 [ci]: https://github.com/cospectrum/scrfd/workflows/ci/badge.svg
 
-Efficient face detection using SCRFD.
+Face detection using SCRFD.
 
 ```sh
 pip install scrfd
