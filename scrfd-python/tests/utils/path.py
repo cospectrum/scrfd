@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
+from pathlib import Path
 
 
 @contextmanager

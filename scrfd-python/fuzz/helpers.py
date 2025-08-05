@@ -1,9 +1,7 @@
 import atheris
 import numpy as np
-
-from PIL.Image import Image as PILImage
 from PIL import Image
-
+from PIL.Image import Image as PILImage
 
 MIN_INT = -2000
 MAX_INT = 2000

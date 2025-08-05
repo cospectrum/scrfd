@@ -1,12 +1,10 @@
 import numpy as np
-
-from PIL import Image
-from PIL.Image import Image as PILImage
-
-from hypothesis.extra import numpy as npst
 from hypothesis import (
     strategies as st,
 )
+from hypothesis.extra import numpy as npst
+from PIL import Image
+from PIL.Image import Image as PILImage
 
 
 @st.composite

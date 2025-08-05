@@ -1,8 +1,9 @@
-from scrfd import SCRFD
-from scrfd.common import draw_faces
+from pathlib import Path
 
 from PIL import Image
-from pathlib import Path
+
+from scrfd import SCRFD
+from scrfd.common import draw_faces
 
 MODEL_PATH = Path("../models/scrfd.onnx")
 IMAGES = Path("../images/")

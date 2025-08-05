@@ -35,3 +35,139 @@ jobs:
         run: uv run ruff format --check
       - name: pytest
         run: uv run pytest
+
+  rustfmt:
+    name: rustfmt (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [webdemo, scrfd-rust]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.project == 'webdemo' && 'nightly' || 'stable' }}
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --check
+
+  leptosfmt:
+    name: leptosfmt (webdemo)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./webdemo
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Install Leptosfmt
+        run: cargo install leptosfmt
+      - name: Check leptos formatting
+        run: leptosfmt . --check
+
+  clippy:
+    name: clippy (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [webdemo, scrfd-rust]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2025-06-28
+          components: clippy
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features
+        env:
+          RUSTFLAGS: -Dwarnings
+
+  cargo-check:
+    name: cargo check (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [webdemo, scrfd-rust]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.project == 'webdemo' && 'nightly' || 'stable' }}
+      - name: Check code
+        run: cargo check --all-targets --all-features
+        env:
+          RUSTFLAGS: -Dwarnings
+
+  cargo-hack:
+    # cargo-hack checks combinations of feature flags to ensure that features are all additive
+    # which is required for feature unification
+    runs-on: ubuntu-latest
+    name: cargo hack (scrfd-rust)
+    defaults:
+      run:
+        working-directory: ./scrfd-rust
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+      # intentionally no target specifier; see https://github.com/jonhoo/rust-ci-conf/pull/4
+      # --feature-powerset runs for every combination of features
+      - name: cargo hack
+        run: cargo hack --feature-powerset check
+
+  cargo-test:
+    name: cargo test (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [webdemo, scrfd-rust]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.project == 'webdemo' && 'nightly' || 'stable' }}
+      - name: Run tests
+        run: cargo test --all-targets --all-features
+      - name: Run doc tests
+        run: cargo test --all-features --doc
+
+  cargo-doc:
+    # run docs generation on nightly rather than stable. This enables features like
+    # https://doc.rust-lang.org/beta/unstable-book/language-features/doc-cfg.html which allows an
+    # API be documented as only available in some specific platforms.
+    name: cargo doc (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: [webdemo, scrfd-rust]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install nightly
+        uses: dtolnay/rust-toolchain@nightly
+      - name: cargo doc
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings --cfg docsrs
