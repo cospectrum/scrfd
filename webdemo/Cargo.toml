@@ -16,7 +16,7 @@ leptos = { version = "0.7.7", features = ["csr"] }
 leptos-use = { version = "0.15.6", default-features = false, features = [
     "use_user_media",
 ] }
-scrfd = { version = "0.1.0", path = "../scrfd-rust" }
+scrfd = { version = "0.1.0", path = "../scrfd-rust", default-features = false }
 web-sys = { version = "0.3", features = [
     "CanvasRenderingContext2d",
     "HtmlCanvasElement",
