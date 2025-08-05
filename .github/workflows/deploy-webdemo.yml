@@ -48,25 +48,24 @@ jobs:
           public_url: "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
 
       # Deploy to gh-pages branch
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: webdemo/dist
+      # - name: Deploy 🚀
+      #   uses: JamesIves/github-pages-deploy-action@v4
+      #   with:
+      #     folder: webdemo/dist
 
       # Deploy with Github Static Pages
-      #
-      # - name: Setup Pages
-      #   uses: actions/configure-pages@v5
-      #   with:
-      #     enablement: true
-      #     # token:
-      #
-      # - name: Upload artifact
-      #   uses: actions/upload-pages-artifact@v3
-      #   with:
-      #     # Upload dist dir
-      #     path: './webdemo/dist'
-      #
-      # - name: Deploy to GitHub Pages 🚀
-      #   id: deployment
-      #   uses: actions/deploy-pages@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+          # token:
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload dist dir
+          path: './webdemo/dist'
+
+      - name: Deploy to GitHub Pages 🚀
+        id: deployment
+        uses: actions/deploy-pages@v4
