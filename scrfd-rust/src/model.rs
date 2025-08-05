@@ -330,12 +330,7 @@ fn postprocess(
         assert_eq!(bbox.shape(), [4]);
         assert_eq!(kps.shape(), [2 * KPS]);
         let (x1, y1, x2, y2) = (bbox[0], bbox[1], bbox[2], bbox[3]);
-        let bbox = Bbox {
-            x: x1,
-            y: y1,
-            w: x2 - x1,
-            h: y2 - y1,
-        };
+        let bbox = Bbox::from_xywh(x1, y1, x2 - x1, y2 - y1);
         let kps = {
             let mut points = [Point { x: 0., y: 0. }; KPS];
             let it = kps.iter().copied();
@@ -356,7 +351,7 @@ fn postprocess(
         faces.push(Face {
             keypoints: kps,
             bbox,
-            score,
+            probability: score,
         });
     }
     faces

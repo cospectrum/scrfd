@@ -18,27 +18,15 @@ concurrency:
 
 jobs:
   Github-Pages-Release:
-
     timeout-minutes: 10
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./webdemo
     steps:
       - uses: actions/checkout@v4
-
       - name: Install nightly Rust
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-
-      - name: Add WASM target
-        run: rustup target add wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown
 
       # If using tailwind...
       # - name: Download and install tailwindcss binary
@@ -48,37 +36,37 @@ jobs:
         with:
           # Optional version of trunk to install(eg. 'v0.21.14', 'latest')
           version: 'v0.21.14'
-
       - name: Build with Trunk
         # "${GITHUB_REPOSITORY#*/}" evaluates into the name of the repository
         # using --public-url something will allow trunk to modify all the href paths like from favicon.ico to repo_name/favicon.ico .
         # this is necessary for github pages where the site is deployed to username.github.io/repo_name and all files must be requested
         # relatively as favicon.ico. if we skip public-url option, the href paths will instead request username.github.io/favicon.ico which
         # will obviously return error 404 not found.
-        run: trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
-
+        working-directory: ./webdemo
+        run: trunk build --release --public-url "$public_url"
+        env:
+          public_url: "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
 
       # Deploy to gh-pages branch
-      # - name: Deploy 🚀
-      #   uses: JamesIves/github-pages-deploy-action@v4
-      #   with:
-      #     folder: dist
-
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: webdemo/dist
 
       # Deploy with Github Static Pages
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-          # token:
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload dist dir
-          path: './webdemo/dist'
-
-      - name: Deploy to GitHub Pages 🚀
-        id: deployment
-        uses: actions/deploy-pages@v4
+      #
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v5
+      #   with:
+      #     enablement: true
+      #     # token:
+      #
+      # - name: Upload artifact
+      #   uses: actions/upload-pages-artifact@v3
+      #   with:
+      #     # Upload dist dir
+      #     path: './webdemo/dist'
+      #
+      # - name: Deploy to GitHub Pages 🚀
+      #   id: deployment
+      #   uses: actions/deploy-pages@v4

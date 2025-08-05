@@ -6,10 +6,25 @@ pub struct Point {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Bbox {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
+    pub upper_left: Point,
+    pub lower_right: Point,
+}
+
+impl Bbox {
+    pub fn width(self) -> f32 {
+        self.lower_right.x - self.upper_left.x
+    }
+    pub fn height(self) -> f32 {
+        self.lower_right.y - self.upper_left.y
+    }
+    pub(crate) fn from_xywh(x: f32, y: f32, w: f32, h: f32) -> Self {
+        let upper_left = Point { x, y };
+        let lower_right = Point { x: x + w, y: y + h };
+        Self {
+            upper_left,
+            lower_right,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -23,7 +38,7 @@ pub struct FaceKeypoints {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Face {
-    pub score: f32,
+    pub probability: f32,
     pub keypoints: FaceKeypoints,
     pub bbox: Bbox,
 }

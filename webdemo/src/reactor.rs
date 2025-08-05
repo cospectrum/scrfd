@@ -81,8 +81,9 @@ fn draw_face(img: &mut RgbaImage, face: scrfd::Face) {
     }
 
     let color = Rgba([255, 0, 0, 255]);
-    let (x, y) = (face.bbox.x as i32, face.bbox.y as i32);
-    let (width, height) = (face.bbox.w as u32, face.bbox.h as u32);
+    let x = face.bbox.upper_left.x as i32;
+    let y = face.bbox.upper_left.y as i32;
+    let (width, height) = (face.bbox.width() as u32, face.bbox.height() as u32);
     let rect = imageproc::rect::Rect::at(x, y).of_size(width, height);
     imageproc::drawing::draw_hollow_rect_mut(img, rect, color);
 }
