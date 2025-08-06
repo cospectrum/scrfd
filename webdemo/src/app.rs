@@ -25,13 +25,22 @@ pub fn App() -> impl IntoView {
     }));
 
     Effect::new(move |_| {
-        video_ref.get().map(|video| {
-            match stream.get() {
-                Some(Ok(stream)) => video.set_src_object(Some(&stream)),
-                Some(Err(e)) => error!("failed to get media stream: {:?}", e),
-                None => log!("no stream yet"),
+        match stream.get() {
+            Some(Ok(stream)) => {
+                video_ref.with(|video| {
+                    if let Some(video) = video {
+                        video.set_src_object(Some(&stream))
+                    }
+                });
+            }
+            Some(Err(e)) => error!("failed to get media stream: {:?}", e),
+            None => log!("no stream yet"),
+        };
+        video_ref.with(|video| {
+            let Some(video) = video else {
+                log!("no video yet");
+                return;
             };
-
             let _ = video
                 .add_event_listener_with_callback("play", frame_listener.as_ref().unchecked_ref())
                 .inspect_err(|e| {
@@ -41,16 +50,21 @@ pub fn App() -> impl IntoView {
     });
 
     view! {
-      <div class="player">
-        <video
-          class="frame"
-          node_ref=video_ref
-          controls=false
-          autoplay=true
-          muted=true
-          hidden=false
-        ></video>
-        <canvas class="frame" node_ref=canvas_ref></canvas>
+      <div class="dashboard">
+        <div class="panel">
+          <video
+            class="frame"
+            node_ref=video_ref
+            controls=false
+            autoplay=true
+            playsinline=true
+            muted=true
+            hidden=false
+          ></video>
+        </div>
+        <div class="panel">
+          <canvas class="frame" node_ref=canvas_ref></canvas>
+        </div>
       </div>
       <canvas node_ref=temporary_canvas_ref style="display: none;"></canvas>
     }
