@@ -7,7 +7,7 @@
 
 Face detection using SCRFD.
 
-[webdemo](cospectrum.github.io/scrfd/)
+[webdemo](https://cospectrum.github.io/scrfd/)
 
 ## Getting Started
 
