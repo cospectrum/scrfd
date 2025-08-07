@@ -1,11 +1,35 @@
 use crate::{canvas::RenderState, on_video_play, reactor::ModelReactor};
 use gloo_worker::Spawnable;
 use leptos::{logging::*, prelude::*};
-use wasm_bindgen::{prelude::Closure, JsCast};
-use web_sys::Event;
+use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
+use web_sys::{Event, MediaStream};
+
+pub fn setup_video_stream(
+    video_ref: NodeRef<leptos::html::Video>,
+    stream: &Signal<Option<Result<MediaStream, JsValue>>, LocalStorage>,
+) {
+    let Some(stream) = stream.get() else {
+        log!("setup_video_stream: stream is not ready yet");
+        return;
+    };
+    let Some(video) = video_ref.get() else {
+        log!("setup_video_stream: video is not ready yet");
+        return;
+    };
+
+    let stream = match stream {
+        Ok(stream) => stream,
+        Err(e) => {
+            error!("failed to get media stream: {:?}", e);
+            return;
+        }
+    };
+    video.set_src_object(Some(&stream))
+}
 
 pub fn setup_frame_listener(state: RenderState) {
     let Some(video) = state.video.get() else {
+        log!("setup_frame_listener: video is not ready yet");
         return;
     };
 

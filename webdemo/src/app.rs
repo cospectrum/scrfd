@@ -1,5 +1,5 @@
 use crate::{canvas::RenderState, effects};
-use leptos::{logging::*, prelude::*};
+use leptos::prelude::*;
 use leptos_use::{use_user_media, UseUserMediaReturn};
 
 #[component]
@@ -11,21 +11,7 @@ pub fn App() -> impl IntoView {
     start();
 
     Effect::new(move |_| {
-        let Some(stream) = stream.get() else {
-            return;
-        };
-        let stream = match stream {
-            Ok(stream) => stream,
-            Err(e) => {
-                error!("failed to get media stream: {:?}", e);
-                return;
-            }
-        };
-        let Some(video) = video_ref.get() else {
-            log!("video is not ready yeat");
-            return;
-        };
-        video.set_src_object(Some(&stream))
+        effects::setup_video_stream(video_ref, &stream);
     });
 
     Effect::new(move |_| {
