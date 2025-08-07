@@ -5,50 +5,65 @@ use futures::{sink::SinkExt, StreamExt};
 use gloo_worker::reactor::{reactor, ReactorScope};
 
 use crate::canvas::ImageBuf;
-
-const MODEL_BYTES: &[u8] = include_bytes!("../../models/scrfd.onnx");
-
-fn load_model() -> anyhow::Result<scrfd::Scrfd> {
-    let clock = web_time::Instant::now();
-    let model = scrfd::Scrfd::from_bytes(MODEL_BYTES)?;
-    log!("parsed model in {:?}", clock.elapsed());
-    Ok(model)
-}
+//
+// const MODEL_BYTES: &[u8] = include_bytes!("../../models/scrfd.onnx");
+//
+// fn load_model() -> anyhow::Result<scrfd::Scrfd> {
+//     let clock = web_time::Instant::now();
+//     let model = scrfd::Scrfd::from_bytes(MODEL_BYTES)?;
+//     log!("parsed model in {:?}", clock.elapsed());
+//     Ok(model)
+// }
 
 #[reactor]
 pub async fn ModelReactor(mut scope: ReactorScope<ImageBuf, ImageBuf>) {
     log!("entered reactor");
     loop {
-        if let Err(e) = start_reactor(&mut scope).await {
-            error!("reactor failed: {:?}", e);
+        match start_reactor(&mut scope).await {
+            Err(e) => {
+                error!("reactor failed: {:?}", e);
+                continue;
+            }
+            Ok(_) => {
+                log!("reactor finished");
+                return;
+            }
         }
     }
 }
 
 async fn start_reactor(scope: &mut ReactorScope<ImageBuf, ImageBuf>) -> anyhow::Result<()> {
     log!("started reactor");
-    let model = load_model()?;
+    // let model = load_model()?;
     loop {
-        if let Err(e) = start_reactor_loop(scope, &model).await {
-            error!("reactor loop failed: {:?}", e);
+        match start_reactor_loop(scope /* &model */).await {
+            Err(e) => {
+                error!("reactor loop failed: {:?}", e);
+                continue;
+            }
+            Ok(_) => {
+                log!("reactor loop finished");
+                return Ok(());
+            }
         }
     }
 }
 
 async fn start_reactor_loop(
     scope: &mut ReactorScope<ImageBuf, ImageBuf>,
-    model: &scrfd::Scrfd,
+    // model: &scrfd::Scrfd,
 ) -> anyhow::Result<()> {
     log!("starting reactor loop");
     loop {
         let Some(input) = scope.next().await else {
-            log!("no input for reactor");
-            continue;
+            log!("no input for reactor, returning");
+            return Ok(());
         };
-        let input = input.to_rgba_image()?;
-        let output = process_image_with_model(model, input)?;
-        let output = ImageBuf::new(output.width(), output.height(), output.into_vec());
-        scope.send(output).await?;
+        log!("reactor got frame");
+        // let input = input.to_rgba_image()?;
+        // let output = process_image_with_model(model, input)?;
+        // let output = ImageBuf::new(output.width(), output.height(), output.into_vec());
+        scope.send(input).await?;
     }
 }
 

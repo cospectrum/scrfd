@@ -1,4 +1,4 @@
-use crate::{canvas::RenderState, hooks, reactor::ModelReactor};
+use crate::{canvas::RenderState, on_video_play, reactor::ModelReactor};
 use gloo_worker::Spawnable;
 use leptos::{logging::*, prelude::*};
 use leptos_use::{use_user_media, UseUserMediaReturn};
@@ -21,32 +21,36 @@ pub fn App() -> impl IntoView {
             canvas: canvas_ref,
             temporary_canvas: temporary_canvas_ref,
         };
-        hooks::on_video_play(state, reactor);
+        on_video_play(state, reactor);
     }));
 
     Effect::new(move |_| {
-        match stream.get() {
-            Some(Ok(stream)) => {
-                video_ref.with(|video| {
-                    if let Some(video) = video {
-                        video.set_src_object(Some(&stream))
-                    }
-                });
-            }
-            Some(Err(e)) => error!("failed to get media stream: {:?}", e),
-            None => log!("no stream yet"),
+        let Some(stream) = stream.get() else {
+            return;
         };
-        video_ref.with(|video| {
-            let Some(video) = video else {
-                log!("no video yet");
+        let stream = match stream {
+            Ok(stream) => stream,
+            Err(e) => {
+                error!("failed to get media stream: {:?}", e);
                 return;
-            };
-            let _ = video
-                .add_event_listener_with_callback("play", frame_listener.as_ref().unchecked_ref())
-                .inspect_err(|e| {
-                    error!("failed to attach frame listener: {:?}", e);
-                });
-        })
+            }
+        };
+        let Some(video) = video_ref.get() else {
+            log!("video is not ready yeat");
+            return;
+        };
+        video.set_src_object(Some(&stream))
+    });
+
+    Effect::new(move |_| {
+        let Some(video) = video_ref.get() else {
+            return;
+        };
+        let _ = video
+            .add_event_listener_with_callback("play", frame_listener.as_ref().unchecked_ref())
+            .inspect_err(|e| {
+                error!("failed to attach frame listener: {:?}", e);
+            });
     });
 
     view! {

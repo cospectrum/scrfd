@@ -1,7 +1,10 @@
 mod app;
 mod canvas;
-mod hooks;
+mod onvideo;
 mod reactor;
+// mod effects;
+
+use onvideo::on_video_play;
 
 pub use app::App;
 pub use reactor::ModelReactor;
