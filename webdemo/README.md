@@ -1,5 +1,5 @@
 # webdemo
 
 ```sh
-trunk serve --release
+trunk serve
 ```
