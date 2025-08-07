@@ -1,8 +1,8 @@
 mod app;
 mod canvas;
+mod effects;
 mod onvideo;
 mod reactor;
-// mod effects;
 
 use onvideo::on_video_play;
 

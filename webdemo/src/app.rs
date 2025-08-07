@@ -1,9 +1,6 @@
-use crate::{canvas::RenderState, on_video_play, reactor::ModelReactor};
-use gloo_worker::Spawnable;
+use crate::{canvas::RenderState, effects};
 use leptos::{logging::*, prelude::*};
 use leptos_use::{use_user_media, UseUserMediaReturn};
-use wasm_bindgen::{prelude::Closure, JsCast};
-use web_sys::Event;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -12,17 +9,6 @@ pub fn App() -> impl IntoView {
     let temporary_canvas_ref = NodeRef::<leptos::html::Canvas>::new();
     let UseUserMediaReturn { stream, start, .. } = use_user_media();
     start();
-
-    let frame_listener = Closure::<dyn Fn(Event)>::wrap(Box::new(move |_: Event| {
-        log!("entered frame listener");
-        let reactor = ModelReactor::spawner().spawn("./worker.js");
-        let state = RenderState {
-            video: video_ref,
-            canvas: canvas_ref,
-            temporary_canvas: temporary_canvas_ref,
-        };
-        on_video_play(state, reactor);
-    }));
 
     Effect::new(move |_| {
         let Some(stream) = stream.get() else {
@@ -43,14 +29,12 @@ pub fn App() -> impl IntoView {
     });
 
     Effect::new(move |_| {
-        let Some(video) = video_ref.get() else {
-            return;
+        let state = RenderState {
+            video: video_ref,
+            canvas: canvas_ref,
+            temporary_canvas: temporary_canvas_ref,
         };
-        let _ = video
-            .add_event_listener_with_callback("play", frame_listener.as_ref().unchecked_ref())
-            .inspect_err(|e| {
-                error!("failed to attach frame listener: {:?}", e);
-            });
+        effects::setup_frame_listener(state);
     });
 
     view! {
