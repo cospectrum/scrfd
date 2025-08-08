@@ -8,10 +8,6 @@ name = "main"
 path = "src/bin/main.rs"
 
 [[bin]]
-name = "scheduler"
-path = "src/bin/scheduler.rs"
-
-[[bin]]
 name = "worker"
 path = "src/bin/worker.rs"
 

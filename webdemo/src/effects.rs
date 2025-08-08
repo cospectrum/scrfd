@@ -1,5 +1,4 @@
-use crate::{canvas::RenderState, on_video_play, Scheduler};
-use gloo_worker::Spawnable;
+use crate::{canvas::RenderState, on_video_play};
 use leptos::{logging::*, prelude::*};
 use wasm_bindgen::{prelude::Closure, JsCast, JsValue};
 use web_sys::{Event, MediaStream};
@@ -35,8 +34,7 @@ pub fn setup_frame_listener(state: RenderState) {
 
     let frame_listener = Closure::<dyn Fn(Event)>::wrap(Box::new(move |_: Event| {
         log!("entered frame listener");
-        let reactor = Scheduler::spawner().spawn("./scheduler.js");
-        on_video_play(state, reactor);
+        on_video_play(state);
     }));
 
     let _ = video
