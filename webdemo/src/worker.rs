@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::canvas::ImageBuf;
 use crate::process_image_with_model;
 
@@ -80,6 +82,9 @@ async fn start_worker_loop(scope: &mut Scope, ctx: &mut Ctx) -> anyhow::Result<(
                 image,
                 frame_number,
             } => {
+                let secs = 0.1 * worker_id as f32;
+                gloo_timers::future::sleep(Duration::from_secs_f32(secs)).await;
+
                 log!("worker got init msg, worker_id={}", worker_id);
                 ctx.worker_id = Some(worker_id);
                 (image, frame_number)
