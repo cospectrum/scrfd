@@ -2,8 +2,6 @@ use crate::{
     canvas::{read_frame, write_frame, ImageBuf, RenderState},
     worker,
 };
-use std::time::Duration;
-
 use anyhow::{anyhow, Result as AnyhowResult};
 use futures::{
     stream::{SelectAll, SplitSink, SplitStream},
@@ -12,8 +10,6 @@ use futures::{
 use gloo_worker::{reactor::ReactorBridge, Spawnable};
 use leptos::{logging::*, prelude::*, task::spawn_local};
 use wasm_bindgen::UnwrapThrowExt;
-
-const INIT_STEP_SLEEP: f32 = 0.1;
 
 type Reactor = ReactorBridge<crate::Worker>;
 type Sink = SplitSink<Reactor, worker::InputMsg>;
@@ -85,8 +81,6 @@ async fn init_step(state: RenderState, ctx: &mut Ctx) -> AnyhowResult<()> {
         frame_number: ctx.current_frame_number,
     };
     sink.send(msg).await?;
-
-    gloo_timers::future::sleep(Duration::from_secs_f32(INIT_STEP_SLEEP)).await;
 
     Ok(())
 }
