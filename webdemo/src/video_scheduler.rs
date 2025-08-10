@@ -1,4 +1,7 @@
-use crate::canvas::{read_frame, write_frame, ImageBuf, RenderState};
+use crate::{
+    canvas::{read_frame, write_frame, ImageBuf, RenderState},
+    worker,
+};
 use std::time::Duration;
 
 use anyhow::{anyhow, Result as AnyhowResult};
@@ -13,20 +16,28 @@ use wasm_bindgen::UnwrapThrowExt;
 const INIT_STEP_SLEEP: f32 = 0.1;
 
 type Reactor = ReactorBridge<crate::Worker>;
-type Sink = SplitSink<Reactor, ImageBuf>;
+type Sink = SplitSink<Reactor, worker::InputMsg>;
 type _Stream = SplitStream<Reactor>;
 type Stream = SelectAll<_Stream>;
 
 #[derive(Debug)]
 struct Ctx {
-    frame_number: usize,
-    num_workers: i32,
+    current_frame_number: u32,
+    last_shown_frame_number: Option<u32>,
     sinks: Vec<Sink>,
     stream: Stream,
 }
 
+impl Ctx {
+    fn num_workers(&self) -> usize {
+        self.sinks.len()
+    }
+}
+
 pub fn on_video_play(state: RenderState) {
     let num_workers = get_num_workers();
+    assert!(num_workers > 0);
+    log!("num_workers={}", num_workers);
 
     let (sinks, streams) = (0..num_workers)
         .map(|_| crate::Worker::spawner().spawn("./worker.js"))
@@ -36,8 +47,8 @@ pub fn on_video_play(state: RenderState) {
     let stream = futures::stream::select_all(streams);
 
     let ctx = Ctx {
-        frame_number: 0,
-        num_workers,
+        last_shown_frame_number: None,
+        current_frame_number: 0,
         sinks,
         stream,
     };
@@ -45,61 +56,95 @@ pub fn on_video_play(state: RenderState) {
 }
 
 fn animation_loop(state: RenderState, mut ctx: Ctx) {
-    let sink_at = ctx.frame_number % ctx.num_workers as usize;
-
     spawn_local(async move {
-        if ctx.frame_number < ctx.num_workers as usize {
-            if let Err(e) = init_step(state, &mut ctx.sinks[sink_at]).await {
+        if ctx.current_frame_number < ctx.num_workers() as u32 {
+            if let Err(e) = init_step(state, &mut ctx).await {
                 error!("init step failed: {:?}", e);
             }
-        } else if let Err(e) = request_step(state, &mut ctx.stream, &mut ctx.sinks[sink_at]).await {
+        } else if let Err(e) = request_step(state, &mut ctx).await {
             error!("request step failed: {:?}", e);
         }
         request_animation_frame(move || {
-            ctx.frame_number += 1;
+            ctx.current_frame_number += 1;
             animation_loop(state, ctx);
         });
     });
 }
 
-async fn init_step(state: RenderState, sink: &mut Sink) -> AnyhowResult<()> {
-    log!("making init step");
-    read_and_send_frame(state, sink).await?;
+async fn init_step(state: RenderState, ctx: &mut Ctx) -> AnyhowResult<()> {
+    let worker_id = ctx.current_frame_number;
+    log!("making init step, worker_id={}", worker_id);
+
+    assert!(worker_id < ctx.sinks.len() as u32);
+    let sink = &mut ctx.sinks[worker_id as usize];
+
+    let image = read_image_buf(state)?;
+    let msg = worker::InputMsg::Init {
+        worker_id,
+        image,
+        frame_number: ctx.current_frame_number,
+    };
+    sink.send(msg).await?;
+
     gloo_timers::future::sleep(Duration::from_secs_f32(INIT_STEP_SLEEP)).await;
 
     Ok(())
 }
 
-async fn request_step(
-    state: RenderState,
-    stream: &mut Stream,
-    sink: &mut Sink,
-) -> AnyhowResult<()> {
-    let out = stream
+async fn request_step(state: RenderState, ctx: &mut Ctx) -> AnyhowResult<()> {
+    let output_msg = ctx
+        .stream
         .next()
         .await
-        .ok_or_else(|| anyhow!("no output"))?
-        .to_image_data()?;
+        .ok_or_else(|| anyhow!("no output"))?;
 
-    write_frame(state, &out)?;
+    let worker::OutputMsg {
+        worker_id,
+        image,
+        frame_number,
+    } = output_msg;
 
-    read_and_send_frame(state, sink).await?;
+    let image_data = image.to_image_data()?;
+    if ctx.last_shown_frame_number.is_none() || frame_number > ctx.last_shown_frame_number.unwrap()
+    {
+        ctx.last_shown_frame_number = Some(frame_number);
+        write_frame(state, &image_data)?;
+    } else {
+        log!(
+            "dropped frame_number={} from worker_id={}, last_shown_frame_number={}",
+            frame_number,
+            worker_id,
+            ctx.last_shown_frame_number.unwrap(),
+        )
+    }
+
+    let sink = &mut ctx.sinks[worker_id as usize];
+    let next_image = read_image_buf(state)?;
+    let msg = worker::InputMsg::Image {
+        image: next_image,
+        frame_number: ctx.current_frame_number + 1,
+    };
+    sink.send(msg).await?;
+
     Ok(())
 }
 
-async fn read_and_send_frame(state: RenderState, sink: &mut Sink) -> AnyhowResult<()> {
+fn read_image_buf(state: RenderState) -> AnyhowResult<ImageBuf> {
     let image_data = read_frame(state)?;
     let image_buf = ImageBuf::new(image_data.width(), image_data.height(), image_data.data().0);
-    sink.send(image_buf).await?;
-    Ok(())
+    Ok(image_buf)
 }
 
 fn get_num_workers() -> i32 {
     let num_cpus = get_num_cpus();
+    log!("num_cpus={}", num_cpus);
     assert!(num_cpus > 0);
-    let num_workers = if num_cpus == 1 { 1 } else { num_cpus - 1 };
-    assert!(num_workers > 0);
-    num_workers
+    match num_cpus {
+        1 => 1,
+        2 => 1,
+        3 => 2,
+        n => n - 2,
+    }
 }
 
 fn get_num_cpus() -> i32 {
@@ -108,8 +153,5 @@ fn get_num_cpus() -> i32 {
         .navigator();
 
     let num_cpus = navigator.hardware_concurrency() as i32;
-    if num_cpus <= 0 {
-        return 1;
-    }
-    num_cpus
+    num_cpus.max(1)
 }
