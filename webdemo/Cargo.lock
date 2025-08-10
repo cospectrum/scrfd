@@ -2934,6 +2934,7 @@ dependencies = [
  "scrfd",
  "serde",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
  "web-time",
 ]
