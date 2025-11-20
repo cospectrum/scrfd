@@ -36,4 +36,4 @@ for face in faces:
 
 ## License
 The license applied only to code.
-The models are a derivative work of InsightFace and are used for testing purposes only without any license warranties.
+The models are a derivative work of [InsightFace](https://github.com/deepinsight/insightface) and are used for testing purposes only without any license warranties.
