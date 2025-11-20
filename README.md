@@ -33,3 +33,7 @@ for face in faces:
 ```
 
 <img align="middle" src="./readme.png" alt="face detection">
+
+## License
+The license applied only to code.
+The models are a derivative work of InsightFace and are used for testing purposes only without any license warranties.
