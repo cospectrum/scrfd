@@ -1,5 +1,0 @@
-# webdemo
-
-```sh
-trunk serve
-```
