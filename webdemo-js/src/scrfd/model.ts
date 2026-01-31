@@ -1,5 +1,8 @@
 import * as ort from 'onnxruntime-web';
 import { Bbox } from './types';
+
+// Point ONNX Runtime to WASM files (Vite doesn't serve them from node_modules)
+ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
 import type { Face, FaceKeypoints, Point, Threshold } from './types';
 
 const KPS = 5;
@@ -205,15 +208,15 @@ export class Scrfd {
         throw new Error(`Unexpected keypoints shape: ${keypointsShape.join(',')}`);
       }
 
-      // Reshape if needed (remove batch dimension)
+      // Reshape if needed (remove batch dimension - take first batch)
       if (scoresShape.length === 3) {
-        scores = scores.slice(scoresShape[1] * scoresShape[2]);
+        scores = scores.slice(0, scoresShape[1] * scoresShape[2]);
       }
       if (boxesShape.length === 3) {
-        boxes = boxes.slice(boxesShape[1] * boxesShape[2]);
+        boxes = boxes.slice(0, boxesShape[1] * boxesShape[2]);
       }
       if (keypointsShape.length === 3) {
-        keypoints = keypoints.slice(keypointsShape[1] * keypointsShape[2]);
+        keypoints = keypoints.slice(0, keypointsShape[1] * keypointsShape[2]);
       }
 
       // Scale by stride

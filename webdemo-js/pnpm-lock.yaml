@@ -6,6 +6,7 @@ settings:
 
 overrides:
   vite: npm:rolldown-vite@7.2.5
+  vite-plugin-static-copy: ^2.1.0
 
 importers:
 
